@@ -1,0 +1,24 @@
+[project]
+name = "combinellm"
+version = "0.1.0"
+description = "Self-hosted multi-provider LLM workspace"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "fastapi>=0.115,<1",
+    "pydantic-settings>=2.6,<3",
+    "uvicorn>=0.32,<1",
+]
+
+[dependency-groups]
+dev = ["httpx>=0.27,<1", "pytest>=8,<10", "ruff>=0.8,<1"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

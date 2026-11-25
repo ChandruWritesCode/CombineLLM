@@ -1,0 +1,12 @@
+services:
+  backend:
+    build: .
+    ports:
+      - "127.0.0.1:${COMBINELLM_PORT:-8000}:8000"
+    environment:
+      COMBINELLM_APP_NAME: ${COMBINELLM_APP_NAME:-CombineLLM}
+      COMBINELLM_ENVIRONMENT: ${COMBINELLM_ENVIRONMENT:-development}
+    init: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
