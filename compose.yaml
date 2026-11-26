@@ -9,9 +9,12 @@ services:
       COMBINELLM_GEMINI_API_KEY: ${COMBINELLM_GEMINI_API_KEY:-}
       COMBINELLM_GEMINI_MODEL: ${COMBINELLM_GEMINI_MODEL:-}
       COMBINELLM_PROVIDER_TIMEOUT_SECONDS: ${COMBINELLM_PROVIDER_TIMEOUT_SECONDS:-60}
+      COMBINELLM_PUBLIC_BASE_URL: http://localhost:${COMBINELLM_PORT:-8000}
       COMBINELLM_DATABASE_PATH: /srv/combinellm/data/combinellm.sqlite3
     volumes:
       - chat_data:/srv/combinellm/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     init: true
     restart: unless-stopped
     security_opt:

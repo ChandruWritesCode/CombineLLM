@@ -4,15 +4,22 @@ from contextlib import aclosing
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 
+from app.model_api import build_provider
 from app.providers.base import ChatProvider, ProviderError
-from app.providers.gemini import GeminiProvider
 from app.schemas import ChatRequest, ChatResponse, ProviderStatus, Usage
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
 
 
-def get_provider(request: Request) -> ChatProvider:
-    return GeminiProvider(request.app.state.settings)
+async def get_provider(request: Request) -> ChatProvider:
+    body = await request.json()
+    model_id = body.get("model_id") if isinstance(body, dict) else None
+    conversation_id = request.path_params.get("conversation_id")
+    if not model_id and conversation_id:
+        model_id = request.app.state.store.get(conversation_id).get("model_id")
+    return build_provider(
+        request.app, model_id, "saved_chat" if conversation_id else "stateless_chat"
+    )
 
 
 @router.get("/providers", response_model=list[ProviderStatus])

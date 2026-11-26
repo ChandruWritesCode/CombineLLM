@@ -1,10 +1,11 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 3 — saved conversations and a browser chat interface.**
+**Current release: Phase 4 — model connections, settings, and usage statistics.**
 
-The backend currently integrates Gemini. Provider availability depends on Google
-and your account; a healthy backend does not guarantee a successful model response.
+Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
+Provider availability depends on the service and your account; backend health does
+not guarantee a successful model response.
 
 ## Start in VS Code
 
@@ -24,7 +25,14 @@ This workspace uses port **8001** in `.env`:
 Fresh installations default to port 8000; use the port set in your `.env`.
 The container runs as a non-root user and listens on your machine only.
 
-## Connect Gemini
+## Connect models
+
+Open **Settings** in the sidebar to add connections, credentials and model IDs.
+Choose a model in chat. OpenRouter also supports account connection through PKCE.
+See [Phase 4 setup and options](docs/PHASE_4.md). Use **Usage** for per-model request
+and token statistics. No automatic routing is enabled.
+
+### Import Gemini from the environment
 
 Edit `.env` in VS Code:
 
@@ -39,7 +47,8 @@ successfully generate with it. Check account limits and billing before use.
 Credentials stay on the backend. `.env` is plaintext, ignored by Git, and excluded
 from the image. Never commit it or share it in chat.
 
-Apply configuration changes:
+Environment credentials are imported once into each database. Afterwards, edit
+the model in Settings. For initial import or server configuration changes:
 
 ```bash
 docker compose up -d --wait
@@ -60,8 +69,9 @@ Use `--build` as well after changing source or dependencies. See
 
 Failed, cancelled, and interrupted turns remain visible but are excluded from
 future model context. Successful turns are sent as history on subsequent messages.
-Cloud prompts leave your machine; this is not offline inference. No account login,
-paid-use cap, automatic fallback, or multi-user support exists yet.
+Cloud prompts leave your machine; select a local endpoint for local inference.
+OpenRouter login is supported; other connections use API keys. Paid-use caps,
+automatic fallback, and multi-user support are not included in Phase 4.
 
 ## Develop without Docker
 
@@ -69,7 +79,7 @@ Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then:
 
 ```bash
 uv sync --locked
-uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8002
+uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8002 --no-access-log
 ```
 
 Open [the development workspace](http://localhost:8002/). Changes to Python reload
@@ -99,6 +109,7 @@ responses and do not spend API credits. Tests use temporary databases.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
+| `COMBINELLM_PUBLIC_BASE_URL` | `http://localhost:8001` | Browser origin for login; Compose derives it from host port |
 | `COMBINELLM_APP_NAME` | `CombineLLM` | Service name in API metadata |
 | `COMBINELLM_ENVIRONMENT` | `development` | Validated environment label |
 | `COMBINELLM_PORT` | `8000` | Docker host port |
@@ -115,6 +126,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Development roadmap](docs/ROADMAP.md) — scope and completion of each phase.
 - [Phase 2: Gemini setup](docs/PHASE_2.md) — stateless API, errors, and streaming.
 - [Phase 3: saved chat](docs/PHASE_3.md) — UI behavior and conversation API.
+- [Phase 4: connections and usage](docs/PHASE_4.md) — settings, credentials, login and statistics.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.
@@ -129,7 +141,10 @@ app/chat.py             Original stateless chat endpoint
 app/conversations.py    Saved chat endpoints and generation tasks
 app/storage.py          SQLite repository and versioned migrations
 app/schemas.py          Provider-neutral chat messages
-app/providers/          Gemini adapter and provider interface
+app/connections.py      Model registry and encrypted credentials
+app/model_api.py        Settings and application usage ledger
+app/oauth.py            OpenRouter PKCE account connection
+app/providers/          Gemini, Anthropic and compatible text adapters
 app/static/             HTML, CSS, and JavaScript frontend
 scripts/backup.py       Consistent SQLite backup utility
 tests/                 API, storage, lifecycle, and adapter tests

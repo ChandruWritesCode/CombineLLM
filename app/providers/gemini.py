@@ -38,6 +38,8 @@ class GeminiProvider:
             ],
             "generationConfig": {"maxOutputTokens": request.max_output_tokens},
         }
+        if getattr(self, "temperature", None) is not None:
+            body["generationConfig"]["temperature"] = self.temperature
         if request.system:
             body["systemInstruction"] = {"parts": [{"text": request.system}]}
         url = (
@@ -112,7 +114,7 @@ class GeminiProvider:
             return
         if status in {401, 403}:
             raise ProviderError(
-                "provider_auth_error", "Check your Gemini API key and model access.", 502
+                "provider_auth_error", "Check your API credential and model access.", 502
             )
         if status == 429:
             raise ProviderError(
@@ -140,9 +142,13 @@ class GeminiProvider:
                 break
             if not line:
                 if lines:
-                    yield json.loads("\n".join(lines))
+                    yield (
+                        {"_done": True}
+                        if "\n".join(lines) == "[DONE]"
+                        else json.loads("\n".join(lines))
+                    )
                     lines = []
             elif line.startswith("data:"):
                 lines.append(line[5:].lstrip(" "))
         if lines:
-            yield json.loads("\n".join(lines))
+            yield {"_done": True} if "\n".join(lines) == "[DONE]" else json.loads("\n".join(lines))

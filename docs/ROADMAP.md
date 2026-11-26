@@ -10,17 +10,17 @@ Each phase should leave the application runnable.
    server-side credentials, a chat endpoint, streaming, timeouts, and clear errors.
 3. **Saved chat and basic frontend (implemented):** SQLite, migrations, conversations/messages,
    a simple HTML/CSS/JS chat page, and cancellation.
-4. **Multiple providers and fallback:** more adapters, optional Ollama, model selection,
-   ordered fallback, capability checks, cooldowns, and explicit free-only policies.
-5. **Usage and budgets:** per-attempt usage ledger, estimated versus reported costs,
-   shared quota pools, budget reservations, and a dashboard.
-6. **Coordinated models:** task-based routing, draft/review, bounded task splitting,
-   synthesis, and quality/cost evaluations.
+4. **Model connections and usage (implemented):** unlimited configured connections,
+   manual chat selection, dedicated Settings and Usage pages, encrypted credentials,
+   OpenRouter PKCE login and text adapters. Automatic routing is deliberately deferred.
+5. **Manual budgets and cost estimates (next; user-confirmed scope):** user-entered
+   prices, estimated costs, explicit manual monthly budgets and usage warnings.
+   Keep model selection manual; estimates are not provider bills or quota guarantees.
+6. **Routing and coordinated models (future):** ordered fallback, capability checks,
+   cooldowns, shared quota pools, budget reservations, draft/review and bounded task
+   splitting. Requires explicit policies and evaluations before automatic spending.
 
-Phase 3 includes SQLite persistence and a local chat UI. Phase 4 is next; it will
-add multiple providers and fallback policies. Credentials remain server-side in
-`.env`. Cloud APIs send prompts off the machine; local-only inference will be a
-separate enforced policy. Website subscriptions do not automatically grant API access.
-
-See [the changelog](../CHANGELOG.md) and [Git workflow](CONTRIBUTING.md) for phase
-milestones. Live provider failures do not imply local storage or routing failures.
+The scope was revised at the user's request: settings and basic usage moved into
+Phase 4; automatic model management remains deferred. Website subscriptions do
+not automatically grant API access. See [Phase 4](PHASE_4.md), [the changelog](../CHANGELOG.md)
+and [Git workflow](CONTRIBUTING.md). Live cloud success remains unverified.

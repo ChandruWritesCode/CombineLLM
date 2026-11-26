@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Settings · CombineLLM</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/settings.css" />
+    <script defer src="/static/common.js"></script>
+    <script defer src="/static/settings.js"></script>
+  </head>
+  <body class="management">
+    <aside class="sidebar">
+      <a class="brand" href="/"
+        ><span class="mark">C<span>+</span></span> CombineLLM</a
+      >
+      <div class="workspace-label">PERSONAL WORKSPACE</div>
+      <nav class="page-nav">
+        <a href="/">Chat workspace</a
+        ><a class="active" href="/settings" aria-current="page">Settings</a
+        ><a href="/usage">Usage statistics</a>
+      </nav>
+      <div class="sidebar-footer">Local configuration · Your choice</div>
+    </aside>
+    <main>
+      <header>
+        <div>
+          <span class="eyebrow">MAKE IT YOURS</span>
+          <h1>Settings</h1>
+        </div>
+        <a class="quiet" href="/">Back to chat</a>
+      </header>
+      <div id="notice" role="status" hidden></div>
+      <div class="management-content">
+        <section class="panel">
+          <div class="panel-title">
+            <div>
+              <h2>Your model connections</h2>
+              <p>
+                Add as many connections as you need. Choose a model yourself in
+                each chat.
+              </p>
+            </div>
+            <button id="add-model" class="primary">Add model</button>
+          </div>
+          <div id="model-list" class="model-list"></div>
+        </section>
+        <section class="panel">
+          <h2>Workspace defaults</h2>
+          <form id="defaults-form" class="form-grid">
+            <label
+              >Default model<select id="default-model">
+                <option value="">Choose in chat</option>
+              </select></label
+            ><label
+              >New model output limit<input
+                id="default-tokens"
+                type="number"
+                min="1"
+                max="8192"
+                value="2048"
+                required /></label
+            ><label class="full"
+              >Default system instruction<textarea
+                id="default-system"
+                rows="3"
+                maxlength="10000"
+                placeholder="Optional instructions for your conversations"
+              ></textarea
+              ><small
+                >Used when the selected model has no system instruction of its
+                own.</small
+              ></label
+            >
+            <div class="full">
+              <button class="primary" type="submit">Save defaults</button>
+            </div>
+          </form>
+        </section>
+        <section class="panel help">
+          <h2>APIs and account logins</h2>
+          <p>
+            Gemini, OpenAI, and Claude use API credentials. OpenAI-compatible
+            endpoints can connect services such as Grok, Perplexity, or a
+            private gateway when they support the Chat Completions protocol.
+          </p>
+          <p>
+            OpenRouter supports browser sign-in: save an OpenRouter model, then
+            choose <strong>Connect account</strong>. Your password stays with
+            OpenRouter. An account connection does not make inference free.
+            ChatGPT or Claude website subscriptions are not generic API
+            credentials.
+          </p>
+          <p>
+            For Ollama on your machine, use
+            <code>http://localhost:11434/v1</code> for native development or
+            <code>http://host.docker.internal:11434/v1</code> from Docker. The
+            model must already be installed and the service reachable.
+          </p>
+          <p>
+            Credentials are encrypted on disk. Back up the database
+            <strong>and its matching .key file</strong>. The key lives beside
+            the database, so encryption does not protect against someone with
+            access to your whole machine. Keep this app bound to localhost.
+          </p>
+        </section>
+      </div>
+    </main>
+    <dialog id="model-dialog" aria-labelledby="model-dialog-title">
+      <form id="model-form">
+        <h2 id="model-dialog-title">Add model</h2>
+        <div id="model-error" role="alert" hidden></div>
+        <div class="form-grid">
+          <label
+            >Connection name<input
+              id="model-name"
+              required
+              maxlength="100"
+              placeholder="My fast writing model"
+          /></label>
+          <label
+            >Provider / protocol<select id="model-kind">
+              <option value="gemini">Google Gemini</option>
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic Claude</option>
+              <option value="openrouter">OpenRouter</option>
+              <option value="ollama">Ollama (local)</option>
+              <option value="compatible">OpenAI-compatible API</option>
+            </select></label
+          >
+          <label class="full"
+            >Model ID<input
+              id="model-code"
+              required
+              maxlength="200"
+              placeholder="Exact model ID from your provider"
+          /></label>
+          <label class="full"
+            >API base URL<input id="model-url" type="url" required /><small
+              >Compatible providers receive your prompts and credential at this
+              address. Only use endpoints you trust.</small
+            ></label
+          >
+          <label class="full"
+            >API key / bearer token<input
+              id="model-key"
+              type="password"
+              autocomplete="new-password"
+              maxlength="8192"
+              placeholder="Blank keeps the existing key"
+            /><small id="key-status"
+              >Keys are never returned to your browser.</small
+            ></label
+          >
+          <label class="check full"
+            ><input id="clear-key" type="checkbox" />Remove the saved
+            credential</label
+          >
+          <label
+            >Timeout (seconds)<input
+              id="model-timeout"
+              type="number"
+              min="1"
+              max="300"
+              value="60"
+              required
+          /></label>
+          <label
+            >Maximum output tokens<input
+              id="model-tokens"
+              type="number"
+              min="1"
+              max="8192"
+              value="2048"
+              required
+          /></label>
+          <label
+            >Temperature (optional)<input
+              id="model-temperature"
+              type="number"
+              min="0"
+              max="2"
+              step="0.1"
+              placeholder="Provider default"
+          /></label>
+          <label
+            >Token limit parameter<select id="model-token-parameter">
+              <option value="max_tokens">max_tokens</option>
+              <option value="max_completion_tokens">
+                max_completion_tokens
+              </option></select
+            ><small
+              >For compatible endpoints; OpenAI commonly uses
+              max_completion_tokens.</small
+            ></label
+          >
+          <label class="full"
+            >Model system instruction<textarea
+              id="model-system"
+              rows="3"
+              maxlength="10000"
+              placeholder="Leave blank to use the workspace default"
+            ></textarea>
+          </label>
+          <label class="check"
+            ><input id="model-enabled" type="checkbox" checked />Enabled in
+            chat</label
+          ><label class="check"
+            ><input id="model-usage" type="checkbox" checked />Request stream
+            usage metadata</label
+          >
+        </div>
+        <div class="dialog-actions">
+          <button id="model-cancel" type="button" class="quiet">Cancel</button
+          ><button id="model-save" class="primary" type="submit">
+            Save model
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="confirm-dialog" aria-labelledby="confirm-title">
+      <h2 id="confirm-title">Confirm action</h2>
+      <p id="confirm-text"></p>
+      <div class="dialog-actions">
+        <button id="confirm-cancel" class="quiet">Cancel</button
+        ><button id="confirm-action" class="primary">Continue</button>
+      </div>
+    </dialog>
+  </body>
+</html>

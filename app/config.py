@@ -15,3 +15,4 @@ class Settings(BaseSettings):
     gemini_model: str = Field(default="", pattern=r"^[a-zA-Z0-9._-]*$", max_length=100)
     provider_timeout_seconds: float = Field(default=60, ge=1, le=300)
     database_path: str = "data/combinellm.sqlite3"
+    public_base_url: str = "http://localhost:8001"

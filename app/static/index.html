@@ -1,50 +1,128 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark">
-  <title>CombineLLM · Your workspace</title>
-  <link rel="stylesheet" href="/static/styles.css">
-  <script defer src="/static/app.js"></script>
-</head>
-<body>
-  <aside class="sidebar">
-    <a class="brand" href="/" aria-label="CombineLLM home"><span class="mark">C<span>+</span></span> CombineLLM</a>
-    <div class="workspace-label">PERSONAL WORKSPACE</div>
-    <button id="new-chat" class="primary">＋ New conversation</button>
-    <div class="section-label">Your conversations <span id="chat-count">0</span></div>
-    <nav id="conversations" aria-label="Saved conversations"></nav>
-    <div class="sidebar-footer"><span class="local-icon">◈</span><div>Stored on your machine<small>Cloud prompts go to your provider.</small></div></div>
-  </aside>
-  <main>
-    <header>
-      <div><span class="eyebrow">CHAT WORKSPACE</span><h1 id="chat-title">A little space to think.</h1></div>
-      <div class="header-actions"><button id="rename" class="quiet" disabled>Rename</button><button id="delete" class="quiet danger" disabled>Delete</button><a href="/docs" target="_blank" rel="noopener">API docs</a></div>
-    </header>
-    <div class="provider-bar"><span id="provider-label">Checking connection…</span><span id="provider-state" class="badge">Checking</span><span class="saved-label">Local history · Gemini responses</span></div>
-    <div id="notice" role="status" hidden></div>
-    <section id="thread" aria-label="Conversation messages" tabindex="0">
-      <div id="welcome">
-        <span class="welcome-mark">✳</span><p class="eyebrow">ONE CONVERSATION. ROOM FOR IDEAS.</p>
-        <h2>What are we working on?</h2><p>Start with a question, a rough idea, or something you want to understand.</p>
-        <div class="suggestions"><button data-prompt="Help me break a project idea into small, achievable steps."><b>Make a plan</b><span>Turn an idea into practical steps</span></button><button data-prompt="Explain how APIs work using a simple everyday example."><b>Understand something</b><span>Make a complex topic feel simple</span></button><button data-prompt="Help me brainstorm three different approaches to a problem. Ask me what I am trying to solve first."><b>Explore possibilities</b><span>Find a fresh way to approach it</span></button></div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>CombineLLM · Your workspace</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/settings.css" />
+    <script defer src="/static/app.js"></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="CombineLLM home"
+        ><span class="mark">C<span>+</span></span> CombineLLM</a
+      >
+      <div class="workspace-label">PERSONAL WORKSPACE</div>
+      <button id="new-chat" class="primary">＋ New conversation</button>
+      <div class="section-label">
+        Your conversations <span id="chat-count">0</span>
       </div>
-      <div id="messages"></div>
-    </section>
-    <div class="composer-area">
-      <form id="composer"><label class="sr-only" for="prompt">Your message</label><textarea id="prompt" rows="3" maxlength="50000" placeholder="Ask a question or share an idea…" required></textarea><div class="composer-tools"><span>Enter to send · Shift + Enter for a new line</span><div><button id="stop" type="button" class="quiet" hidden>Stop response</button><button id="send" class="primary" type="submit">Send message</button></div></div></form>
-      <p class="composer-note">Responses can be inaccurate. Check important details. <span id="connection-note">History stays here, even when your provider is unavailable.</span></p>
-    </div>
-  </main>
-  <dialog id="action-dialog" aria-labelledby="dialog-title">
-    <form id="action-form">
-      <h2 id="dialog-title">Rename conversation</h2>
-      <p id="dialog-description"></p>
-      <label id="name-label" for="conversation-name">Conversation name</label>
-      <input id="conversation-name" maxlength="100" autocomplete="off">
-      <div class="dialog-actions"><button type="button" id="dialog-cancel" class="quiet">Cancel</button><button type="submit" id="dialog-confirm" class="primary">Save name</button></div>
-    </form>
-  </dialog>
-</body>
+      <nav id="conversations" aria-label="Saved conversations"></nav>
+      <div class="chat-links">
+        <a href="/settings">Settings</a><a href="/usage">Usage statistics</a>
+      </div>
+      <div class="sidebar-footer">
+        <span class="local-icon">◈</span>
+        <div>
+          Stored on your machine<small
+            >Cloud prompts go to your provider.</small
+          >
+        </div>
+      </div>
+    </aside>
+    <main>
+      <header>
+        <div>
+          <span class="eyebrow">CHAT WORKSPACE</span>
+          <h1 id="chat-title">A little space to think.</h1>
+        </div>
+        <div class="header-actions">
+          <button id="rename" class="quiet" disabled>Rename</button
+          ><button id="delete" class="quiet danger" disabled>Delete</button
+          ><a href="/docs" target="_blank" rel="noopener">API docs</a>
+        </div>
+      </header>
+      <div class="provider-bar">
+        <label class="sr-only" for="chat-model">Model for this chat</label
+        ><select id="chat-model" class="model-select">
+          <option value="">Choose a model</option></select
+        ><span id="provider-state" class="badge">Manual selection</span>
+      </div>
+      <div id="notice" role="status" hidden></div>
+      <section id="thread" aria-label="Conversation messages" tabindex="0">
+        <div id="welcome">
+          <span class="welcome-mark">✳</span>
+          <p class="eyebrow">ONE CONVERSATION. ROOM FOR IDEAS.</p>
+          <h2>What are we working on?</h2>
+          <p>
+            Start with a question, a rough idea, or something you want to
+            understand.
+          </p>
+          <div class="suggestions">
+            <button
+              data-prompt="Help me break a project idea into small, achievable steps."
+            >
+              <b>Make a plan</b
+              ><span>Turn an idea into practical steps</span></button
+            ><button
+              data-prompt="Explain how APIs work using a simple everyday example."
+            >
+              <b>Understand something</b
+              ><span>Make a complex topic feel simple</span></button
+            ><button
+              data-prompt="Help me brainstorm three different approaches to a problem. Ask me what I am trying to solve first."
+            >
+              <b>Explore possibilities</b
+              ><span>Find a fresh way to approach it</span>
+            </button>
+          </div>
+        </div>
+        <div id="messages"></div>
+      </section>
+      <div class="composer-area">
+        <form id="composer">
+          <label class="sr-only" for="prompt">Your message</label
+          ><textarea
+            id="prompt"
+            rows="3"
+            maxlength="50000"
+            placeholder="Ask a question or share an idea…"
+            required
+          ></textarea>
+          <div class="composer-tools">
+            <span>Enter to send · Shift + Enter for a new line</span>
+            <div>
+              <button id="stop" type="button" class="quiet" hidden>
+                Stop response</button
+              ><button id="send" class="primary" type="submit">
+                Send message
+              </button>
+            </div>
+          </div>
+        </form>
+        <p class="composer-note">
+          Responses can be inaccurate. Check important details.
+          <span id="connection-note"
+            >History stays here, even when your provider is unavailable.</span
+          >
+        </p>
+      </div>
+    </main>
+    <dialog id="action-dialog" aria-labelledby="dialog-title">
+      <form id="action-form">
+        <h2 id="dialog-title">Rename conversation</h2>
+        <p id="dialog-description"></p>
+        <label id="name-label" for="conversation-name">Conversation name</label>
+        <input id="conversation-name" maxlength="100" autocomplete="off" />
+        <div class="dialog-actions">
+          <button type="button" id="dialog-cancel" class="quiet">Cancel</button
+          ><button type="submit" id="dialog-confirm" class="primary">
+            Save name
+          </button>
+        </div>
+      </form>
+    </dialog>
+  </body>
 </html>

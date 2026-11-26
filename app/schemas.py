@@ -21,6 +21,7 @@ class Message(BaseModel):
 class ChatRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     provider: Literal["gemini"] = "gemini"
+    model_id: str | None = None
     messages: list[Message] = Field(min_length=1, max_length=100)
     system: str | None = Field(default=None, max_length=10000)
     max_output_tokens: int = Field(default=1024, ge=1, le=8192)

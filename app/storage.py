@@ -23,7 +23,7 @@ class Store:
         with self.connect() as db:
             db.execute("PRAGMA journal_mode=WAL")
             version = db.execute("PRAGMA user_version").fetchone()[0]
-            if version > 1:
+            if version > 2:
                 raise RuntimeError("Database is newer than this application; do not downgrade.")
             if version == 0:
                 db.executescript("""
@@ -46,6 +46,28 @@ class Store:
                     PRAGMA user_version=1;
                     COMMIT;
                 """)
+            if version < 2:
+                db.executescript("""
+                    BEGIN IMMEDIATE;
+                    CREATE TABLE model_connections (
+                        id TEXT PRIMARY KEY, config TEXT NOT NULL, credential TEXT NOT NULL,
+                        auth_method TEXT NOT NULL, created_at TEXT NOT NULL
+                    );
+                    CREATE TABLE preferences (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+                    ALTER TABLE conversations ADD COLUMN model_id TEXT;
+                    ALTER TABLE messages ADD COLUMN model_id TEXT;
+                    CREATE TABLE usage_events (
+                        id TEXT PRIMARY KEY, model_id TEXT, label TEXT, provider TEXT, model TEXT,
+                        source TEXT NOT NULL, status TEXT NOT NULL, started_at TEXT NOT NULL,
+                        duration_ms INTEGER, input_tokens INTEGER, output_tokens INTEGER,
+                        reasoning_tokens INTEGER, total_tokens INTEGER, error_code TEXT
+                    );
+                    CREATE INDEX usage_started ON usage_events(started_at);
+                    UPDATE conversations SET model_id=NULL;
+                    PRAGMA user_version=2;
+                    COMMIT;
+                """)
+            db.execute("UPDATE usage_events SET status='interrupted' WHERE status='running'")
             db.execute(
                 "UPDATE messages SET status='interrupted', error=? WHERE status='streaming'",
                 (
@@ -75,7 +97,9 @@ class Store:
         item = {"id": str(uuid4()), "title": title, "created_at": now(), "updated_at": now()}
         with self.connect() as db:
             db.execute(
-                "INSERT INTO conversations VALUES (:id,:title,:created_at,:updated_at)", item
+                "INSERT INTO conversations (id,title,created_at,updated_at) "
+                "VALUES (:id,:title,:created_at,:updated_at)",
+                item,
             )
         return item
 
@@ -145,7 +169,11 @@ class Store:
                         ]
                     )
             history.append(Message(role="user", content=content))
-            request = ChatRequest(messages=history, max_output_tokens=max_output_tokens)
+            request = ChatRequest(
+                messages=history,
+                max_output_tokens=max_output_tokens,
+                system=getattr(provider, "system_prompt", "") or None,
+            )
             answer_id = str(uuid4())
             for role, text, status, message_id in [
                 ("user", content, "complete", str(uuid4())),
@@ -165,6 +193,12 @@ class Store:
                         provider.model if role == "assistant" else None,
                         now(),
                     ),
+                )
+            model_id = getattr(provider, "model_id", None)
+            db.execute("UPDATE messages SET model_id=? WHERE id=?", (model_id, answer_id))
+            if model_id:
+                db.execute(
+                    "UPDATE conversations SET model_id=? WHERE id=?", (model_id, conversation_id)
                 )
             title = (
                 content[:60]

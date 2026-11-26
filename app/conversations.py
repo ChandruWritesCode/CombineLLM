@@ -31,7 +31,8 @@ class Title(BaseModel):
 class Turn(BaseModel):
     model_config = ConfigDict(extra="forbid")
     content: str = Field(min_length=1, max_length=50000)
-    max_output_tokens: int = Field(default=2048, ge=1, le=8192)
+    max_output_tokens: int | None = Field(default=None, ge=1, le=8192)
+    model_id: str | None = None
 
 
 class Generations:
@@ -139,7 +140,10 @@ async def send(
 ):
     try:
         message_id, chat_request = db.begin(
-            conversation_id, body.content, body.max_output_tokens, provider
+            conversation_id,
+            body.content,
+            body.max_output_tokens or getattr(provider, "max_output_tokens", 2048),
+            provider,
         )
     except ValidationError as exc:
         raise HTTPException(

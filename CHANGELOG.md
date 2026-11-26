@@ -1,5 +1,17 @@
 # Changelog
 
+## Phase 4 — model connections, settings and usage
+
+- Added multiple named model connections and explicit selection per chat.
+- Added Gemini, OpenAI-compatible, Anthropic, OpenRouter and Ollama text adapters.
+- Added Settings and Usage pages, UTC filters and CSV export.
+- Encrypted saved credentials and added official OpenRouter PKCE account connection.
+- Migrated SQLite to schema 2 while preserving chats; backups now include the key file.
+- Imported existing environment Gemini credentials once; future changes use Settings.
+- No automatic routing or fallback. Provider tests are simulated; live cloud generation
+  and live OpenRouter login have not been verified for this release.
+
+
 ## 0.3.0 — Phase 3
 
 - Added a responsive local chat workspace at `/` with saved conversation navigation.

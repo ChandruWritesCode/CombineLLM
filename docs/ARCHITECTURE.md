@@ -73,3 +73,15 @@ Cloud prompts and completed conversation context are sent to the provider.
 The frontend renders model/user text with `textContent`, never raw HTML. Only the
 selected conversation ID is placed in localStorage; chat content remains in SQLite.
 Provider settings presence is shown separately from actual availability.
+
+## Phase 4 additions
+
+SQLite schema 2 adds model connections, workspace preferences and a usage ledger,
+and model connection IDs on conversations/messages. Migration preserves schema 1
+history. Connections encrypt credentials with a Fernet key adjacent to the database.
+Provider selection resolves an explicit ID, saved chat ID, then workspace default;
+missing/disabled selections fail without fallback. Adapter streams are wrapped by
+a tracker that records terminal outcome and reported usage for each attempt.
+Settings and usage use separate HTML pages with plain JavaScript. OpenRouter PKCE
+state is short-lived and process-local, bound to an HttpOnly browser cookie.
+See [Phase 4](PHASE_4.md) for capabilities, API routes and limitations.
