@@ -46,8 +46,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     application = FastAPI(
         title=settings.app_name,
-        version="0.7.0",
-        description="Self-hosted LLM backend. Phase 7: shared cooldowns and routing controls.",
+        version="0.8.0",
+        description="Self-hosted LLM backend. Phase 8: provider discovery and guided setup.",
         lifespan=lifespan,
     )
     application.state.settings = settings
@@ -65,6 +65,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @application.get("/settings", include_in_schema=False)
     async def settings_page():
         return FileResponse(static / "settings.html")
+
+    @application.get("/discover", include_in_schema=False)
+    async def discover_page():
+        return FileResponse(static / "discover.html")
 
     @application.get("/usage", include_in_schema=False)
     async def usage_page():

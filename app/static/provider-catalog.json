@@ -1,0 +1,110 @@
+[
+  {
+    "id": "groq",
+    "name": "Groq",
+    "offer": "Free tier",
+    "signup": "https://console.groq.com/keys",
+    "source": "https://console.groq.com/docs/rate-limits",
+    "kind": "compatible",
+    "base_url": "https://api.groq.com/openai/v1",
+    "model": "openai/gpt-oss-20b",
+    "guide": "Create a Groq account, stay on its free plan, and create an API key. Choose a text model available under your plan. Groq is distinct from xAI Grok.",
+    "checked": "2026-11-26"
+  },
+  {
+    "id": "google",
+    "name": "Google Gemini / Gemma",
+    "offer": "Selected free models",
+    "signup": "https://aistudio.google.com/api-keys",
+    "source": "https://ai.google.dev/gemini-api/docs/pricing",
+    "kind": "gemini",
+    "base_url": "",
+    "model": "gemma-4-26b-a4b-it",
+    "guide": "Create an AI Studio key for your Google project. Check the pricing table and project quota for the exact model. Free-tier data policies differ from paid-tier policies.",
+    "checked": "2026-11-26"
+  },
+  {
+    "id": "openrouter",
+    "name": "OpenRouter",
+    "offer": "Free routes",
+    "signup": "https://openrouter.ai/settings/keys",
+    "source": "https://openrouter.ai/openrouter/free",
+    "kind": "openrouter",
+    "base_url": "",
+    "model": "openrouter/free",
+    "guide": "Create an OpenRouter key or use Connect account in Settings after saving. Select a :free model or openrouter/free. The latter selects a free model upstream; its choice can vary.",
+    "checked": "2026-11-26"
+  },
+  {
+    "id": "cloudflare",
+    "name": "Cloudflare Workers AI",
+    "offer": "Daily allocation",
+    "signup": "https://dash.cloudflare.com/",
+    "source": "https://developers.cloudflare.com/workers-ai/platform/pricing/",
+    "kind": "compatible",
+    "base_url": "https://api.cloudflare.com/client/v4/accounts/ACCOUNT_ID/ai/v1",
+    "model": "@cf/meta/llama-3.2-1b-instruct",
+    "guide": "Open Workers AI in your dashboard. Copy your account ID and create a token scoped to Workers AI. Replace ACCOUNT_ID in the endpoint. Check that your model is eligible for the daily free allocation.",
+    "checked": "2026-11-26"
+  },
+  {
+    "id": "cohere",
+    "name": "Cohere",
+    "offer": "Evaluation",
+    "signup": "https://dashboard.cohere.com/api-keys",
+    "source": "https://docs.cohere.com/docs/rate-limits",
+    "kind": "compatible",
+    "base_url": "https://api.cohere.ai/compatibility/v1",
+    "model": "command-a-plus-05-2026",
+    "guide": "Create an evaluation key, not a production key. Select an available text model. Evaluation limits and production-use terms apply.",
+    "checked": "2026-11-26"
+  },
+  {
+    "id": "cerebras",
+    "name": "Cerebras",
+    "offer": "Trial / card required",
+    "signup": "https://cloud.cerebras.ai/",
+    "source": "https://inference-docs.cerebras.ai/support/rate-limits",
+    "kind": "compatible",
+    "base_url": "https://api.cerebras.ai/v1",
+    "model": "",
+    "guide": "Check trial eligibility before adding a verified payment method. Current documentation describes expiring trial credits, not a permanent free tier. Create an API key and copy an available text model ID from the console.",
+    "checked": "2026-11-26"
+  },
+  {
+    "id": "nvidia",
+    "name": "NVIDIA API Catalog",
+    "offer": "Evaluation / eligibility",
+    "signup": "https://build.nvidia.com/",
+    "source": "https://docs.api.nvidia.com/nim/docs/api-quickstart",
+    "kind": "compatible",
+    "base_url": "https://integrate.api.nvidia.com/v1",
+    "model": "",
+    "guide": "Join the developer program, select a hosted text model and choose Get API Key. Review trial terms and available credits. Copy the model ID from its API example; production access may require a separate service.",
+    "checked": "2026-11-26"
+  },
+  {
+    "id": "mistral",
+    "name": "Mistral",
+    "offer": "Conditional / verify offer",
+    "signup": "https://console.mistral.ai/",
+    "source": "https://mistral.ai/news/mistral-vibe-2-0/",
+    "kind": "compatible",
+    "base_url": "https://api.mistral.ai/v1",
+    "model": "",
+    "guide": "Check whether Experiment access is currently offered to your account. Do not assume the free chat website grants API access. Create a key and copy a model ID eligible for your plan. Do not activate paid billing unless intended.",
+    "checked": "2026-11-26"
+  },
+  {
+    "id": "ollama",
+    "name": "Ollama (local)",
+    "offer": "Local hardware",
+    "signup": "https://ollama.com/",
+    "source": "https://github.com/ollama/ollama/blob/main/docs/api/introduction.mdx",
+    "kind": "ollama",
+    "base_url": "http://host.docker.internal:11434/v1",
+    "model": "",
+    "guide": "Install Ollama and download a text model suitable for your RAM. Start its server, then enter the installed model name. Docker uses host.docker.internal; native CombineLLM uses localhost. The server must be reachable from the backend. Hardware and electricity are your costs.",
+    "checked": "2026-11-26"
+  }
+]

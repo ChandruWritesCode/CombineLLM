@@ -22,7 +22,9 @@ Each phase should leave the application runnable.
 7. **Routing controls (implemented):** persistent shared cooldowns, usage groups,
    fallback permissions, local endpoint restrictions and chat attempt history.
    Capability discovery and hard-budget reservations remain future work.
-8. **Coordinated models (future):** draft/review, bounded task splitting, synthesis
+8. **Provider discovery and guided setup (implemented):** dated curated directory,
+   free/trial/local classifications, official links and prefilled setup walkthroughs.
+9. **Coordinated models (future):** draft/review, bounded task splitting, synthesis
    and quality/cost evaluations.
 
 The scope was revised at the user's request: settings and basic usage moved into

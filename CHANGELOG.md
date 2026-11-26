@@ -1,5 +1,14 @@
 # Changelog
 
+## Phase 8 — provider discovery and guided setup
+
+- Added Find a model with nine dated provider guides and prefilled connection forms.
+- Distinguished recurring offers, evaluations, trials, conditional access and local inference.
+- Added official signup/source links, explicit optional testing and outdated-offer exclusions.
+- Kept keys in the encrypted registry and preserved defaults/fallback settings.
+- Moved coordinated models to Phase 9. No guarantee of exhaustive coverage or free eligibility.
+
+
 ## Phase 7 — shared cooldowns and routing controls
 
 - Added persistent Retry-After cooldowns shared by user-defined usage groups.
