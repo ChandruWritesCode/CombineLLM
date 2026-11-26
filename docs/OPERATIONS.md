@@ -102,3 +102,24 @@ changing prices affects future attempts only. Budget targets do not stop request
 The current-month budget overview uses UTC and ignores historical table filters.
 If the estimate is incomplete, consult provider billing before relying on it.
 See [Phase 5](PHASE_5.md) for excluded charges and accounting limitations.
+
+## Live free-API check — 2026-11-26
+
+Development is paused at Phase 5 at the user's request. The previously completed
+65-test suite and other release checks were not rerun.
+
+Google's official pricing page lists Gemma 4 input/output as free of charge:
+https://aistudio.google.com/docs/pricing#gemma-4
+The existing Google credential successfully listed `gemma-4-26b-a4b-it` and
+`gemma-4-31b-it`. Each was added as a separate connection and received exactly one
+small arithmetic/greeting request through CombineLLM's saved-chat API. Both attempts
+ended with the sanitized error `Provider is temporarily unavailable.` Neither
+produced text or reported usage. The failed chats remain available for inspection;
+missing usage/cost is unknown, not a verified zero charge. Existing connections
+and workspace defaults were not changed. No automated retries were performed.
+
+This verifies the live request/error-recording path, not successful cloud generation.
+A model appearing in the provider catalog does not establish inference availability.
+OpenRouter also documents a zero-priced `openrouter/free` endpoint at
+https://openrouter.ai/openrouter/free, but it requires an authorized account/key;
+no OpenRouter credential was configured or live request attempted during this check.
