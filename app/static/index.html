@@ -50,6 +50,10 @@
           <option value="">Choose a model</option></select
         ><span id="provider-state" class="badge">Manual selection</span>
       </div>
+      <div class="fallback-control">
+        <label><input id="use-fallback" type="checkbox" /> Enable configured fallback for this chat session</label>
+        <small id="fallback-description">Manual selection only. Configure an optional fallback order in Settings.</small>
+      </div>
       <div id="notice" role="status" hidden></div>
       <div id="budget-notice" role="status" hidden></div>
       <section id="thread" aria-label="Conversation messages" tabindex="0">

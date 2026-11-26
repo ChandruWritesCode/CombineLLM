@@ -155,6 +155,12 @@ async function load() {
   $("workspace-budget").value = preferences.monthly_budget_usd ?? "";
   $("budget-warning").value = preferences.budget_warning_percent ?? 80;
   $("default-system").value = preferences.system_prompt;
+  for (let index = 1; index <= 3; index++) {
+    const select = $(`fallback-${index}`);
+    select.replaceChildren(new Option("None", ""));
+    for (const model of models) select.append(new Option(`${model.name}${model.enabled ? "" : " (disabled)"}`, model.id));
+    select.value = preferences.fallback_model_ids?.[index - 1] || "";
+  }
 }
 $("add-model").onclick = () => edit();
 $("model-kind").onchange = kindChanged;
@@ -220,6 +226,7 @@ $("defaults-form").onsubmit = async (event) => {
       body: JSON.stringify({
         monthly_budget_usd: $("workspace-budget").value || null,
         budget_warning_percent: Number($("budget-warning").value),
+        fallback_model_ids: [1, 2, 3].map(i => $(`fallback-${i}`).value).filter(Boolean),
         default_model_id: $("default-model").value || null,
         max_output_tokens: Number($("default-tokens").value),
         system_prompt: $("default-system").value,

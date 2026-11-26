@@ -1,7 +1,7 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 5 — manual budgets and cost estimates.**
+**Current release: Phase 6 — opt-in ordered fallback.**
 
 Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
 Provider availability depends on the service and your account; backend health does
@@ -32,7 +32,8 @@ Choose a model in chat. OpenRouter also supports account connection through PKCE
 See [Phase 4 setup and options](docs/PHASE_4.md). Use **Usage** for per-model request
 and token statistics, estimated costs and monthly budget warnings. Enter your own
 prices and budgets in Settings. Budgets are advisory: requests remain enabled.
-No automatic routing is enabled.
+Manual selection remains the default. Configure an optional fallback order in
+Settings, then explicitly enable it in chat. See [Phase 6](docs/PHASE_6.md).
 
 ### Import Gemini from the environment
 
@@ -73,7 +74,8 @@ Failed, cancelled, and interrupted turns remain visible but are excluded from
 future model context. Successful turns are sent as history on subsequent messages.
 Cloud prompts leave your machine; select a local endpoint for local inference.
 OpenRouter login is supported; other connections use API keys. Paid-use caps,
-automatic fallback, and multi-user support are not included in Phase 4.
+multi-user support and intelligent coordination are not included. Ordered fallback
+is available only when explicitly enabled; budgets remain advisory.
 
 ## Develop without Docker
 
@@ -130,6 +132,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Phase 3: saved chat](docs/PHASE_3.md) — UI behavior and conversation API.
 - [Phase 4: connections and usage](docs/PHASE_4.md) — settings, credentials, login and statistics.
 - [Phase 5: budgets and estimates](docs/PHASE_5.md) — manual rates, warnings and limitations.
+- [Phase 6: ordered fallback](docs/PHASE_6.md) — opt-in routing, attempt limits and policy.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.
@@ -147,6 +150,7 @@ app/schemas.py          Provider-neutral chat messages
 app/connections.py      Model registry and encrypted credentials
 app/model_api.py        Settings and application usage ledger
 app/costs.py            Decimal cost estimates and advisory budgets
+app/routing.py          Bounded opt-in ordered fallback
 app/oauth.py            OpenRouter PKCE account connection
 app/providers/          Gemini, Anthropic and compatible text adapters
 app/static/             HTML, CSS, and JavaScript frontend

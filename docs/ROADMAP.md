@@ -16,11 +16,15 @@ Each phase should leave the application runnable.
 5. **Manual budgets and cost estimates (implemented; user-confirmed scope):** user-entered
    prices, estimated costs, explicit manual monthly budgets and usage warnings.
    Keep model selection manual; estimates are not provider bills or quota guarantees.
-6. **Routing and coordinated models (future):** ordered fallback, capability checks,
-   cooldowns, shared quota pools, budget reservations, draft/review and bounded task
-   splitting. Requires explicit policies and evaluations before automatic spending.
+6. **Ordered fallback (implemented):** opt-in primary plus up to three fallback
+   connections, transient pre-output failures only, 120-second total deadline,
+   per-attempt accounting and accurate response attribution. Manual mode remains default.
+7. **Advanced policies (future):** cooldowns, capability discovery, shared quota
+   pools and conservative hard-budget reservations, with explicit provider policies.
+8. **Coordinated models (future):** draft/review, bounded task splitting, synthesis
+   and quality/cost evaluations.
 
 The scope was revised at the user's request: settings and basic usage moved into
-Phase 4; automatic model management remains deferred. Website subscriptions do
+Phase 4; ordered fallback is now opt-in; intelligent coordination remains deferred. Website subscriptions do
 not automatically grant API access. See [Phase 4](PHASE_4.md), [the changelog](../CHANGELOG.md)
-[Phase 5](PHASE_5.md) and [Git workflow](CONTRIBUTING.md). Live cloud success remains unverified.
+[Phase 5](PHASE_5.md), [Phase 6](PHASE_6.md) and [Git workflow](CONTRIBUTING.md). Live cloud success remains unverified.

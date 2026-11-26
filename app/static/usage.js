@@ -67,6 +67,7 @@ async function refresh() {
       event.total_tokens ?? "Unknown",
       event.duration_ms == null ? "—" : `${event.duration_ms} ms`,
       event.estimated_cost_usd == null ? "Unknown" : formatCost(event.estimated_cost_usd),
+      event.attempt_group_id ? `${event.attempt_group_id} / ${event.attempt_number}` : "Legacy request",
     ])
       row.append(node("td", value));
     $("recent-body").append(row);

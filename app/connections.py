@@ -89,6 +89,7 @@ class Connection(BaseModel):
 class Preferences(BaseModel):
     model_config = ConfigDict(extra="forbid")
     default_model_id: str | None = None
+    fallback_model_ids: list[str] = Field(default_factory=list, max_length=3)
     monthly_budget_usd: Money | None = None
     budget_warning_percent: int = Field(default=80, ge=1, le=100)
     max_output_tokens: int = Field(default=2048, ge=1, le=8192)
@@ -117,6 +118,11 @@ class Connections:
         return Preferences.model_validate_json(row[0]) if row else Preferences()
 
     def save_preferences(self, prefs):
+        if len(set(prefs.fallback_model_ids)) != len(prefs.fallback_model_ids):
+            raise HTTPException(422, "Fallback models must be distinct")
+        for model_id in prefs.fallback_model_ids:
+            if not self.get(model_id)["enabled"]:
+                raise HTTPException(422, "Fallback models must be enabled")
         if prefs.default_model_id:
             model = self.get(prefs.default_model_id)
             if not model["enabled"]:
@@ -208,7 +214,13 @@ class Connections:
         prefs = self.preferences()
         if prefs.default_model_id == model_id:
             prefs.default_model_id = None
-            self.save_preferences(prefs)
+        prefs.fallback_model_ids = [mid for mid in prefs.fallback_model_ids if mid != model_id]
+        # Deleting a connection must also work when another saved choice was disabled.
+        with self.store.connect() as db:
+            db.execute(
+                "INSERT OR REPLACE INTO preferences VALUES ('workspace',?)",
+                (prefs.model_dump_json(),),
+            )
 
     def import_environment(self, settings):
         # Import once; later edits are made through Settings rather than overwritten on restart.

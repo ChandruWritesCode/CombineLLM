@@ -123,3 +123,13 @@ A model appearing in the provider catalog does not establish inference availabil
 OpenRouter also documents a zero-priced `openrouter/free` endpoint at
 https://openrouter.ai/openrouter/free, but it requires an authorized account/key;
 no OpenRouter credential was configured or live request attempted during this check.
+
+## Ordered fallback (Phase 6)
+
+Development resumed after the pause above at the user's request. Manual selection
+remains the default. Configure an order in Settings and enable it explicitly in
+chat. Usage records every attempted connection, including failures; a chain can
+consume quota on multiple providers. Disabled choices require a settings update.
+Stop closes the active attempt. No fallback occurs after partial output, on content
+rejection or on authentication errors. See [Phase 6](PHASE_6.md) for the bounded
+policy; successful live cloud generation is still unverified.

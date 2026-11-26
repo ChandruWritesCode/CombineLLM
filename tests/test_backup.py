@@ -18,7 +18,7 @@ def test_backup_contains_committed_data_and_refuses_overwrite(tmp_path, monkeypa
         assert (
             db.execute("SELECT title FROM conversations").fetchone()[0] == "Keep this conversation"
         )
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 3
+        assert db.execute("PRAGMA user_version").fetchone()[0] == 4
     with pytest.raises(FileExistsError):
         main()
 

@@ -4,8 +4,8 @@ from contextlib import aclosing
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 
-from app.model_api import build_provider
 from app.providers.base import ChatProvider, ProviderError
+from app.routing import select_provider
 from app.schemas import ChatRequest, ChatResponse, ProviderStatus, Usage
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
@@ -17,8 +17,11 @@ async def get_provider(request: Request) -> ChatProvider:
     conversation_id = request.path_params.get("conversation_id")
     if not model_id and conversation_id:
         model_id = request.app.state.store.get(conversation_id).get("model_id")
-    return build_provider(
-        request.app, model_id, "saved_chat" if conversation_id else "stateless_chat"
+    return select_provider(
+        request.app,
+        model_id,
+        "saved_chat" if conversation_id else "stateless_chat",
+        fallback=isinstance(body, dict) and body.get("fallback") is True,
     )
 
 

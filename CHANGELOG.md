@@ -1,5 +1,15 @@
 # Changelog
 
+## Phase 6 — opt-in ordered fallback
+
+- Added a saved order of up to three fallback connections and an explicit chat toggle.
+- Limited fallback to transient failures before answer text, with four total attempts
+  and a 120-second overall deadline; cancellation never starts another attempt.
+- Preserved the selected primary while attributing answers to the actual model.
+- Added attempt group/number tracking in usage and CSV; schema 4 preserves prior data.
+- Retained manual defaults and advisory budgets. Cloud availability remains unverified.
+
+
 ## Phase 5 — manual budgets and cost estimates
 
 - Added optional user-entered USD input/output rates and per-request price snapshots.

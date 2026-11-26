@@ -51,6 +51,12 @@ function controls() {
     (m) => m.id === $("chat-model").value && m.enabled,
   );
   $("chat-model").disabled = sending || !!activeMessage;
+  const fallbackIds = workspacePreferences.fallback_model_ids || [];
+  $("use-fallback").disabled = sending || !!activeMessage || !fallbackIds.length;
+  $("provider-state").textContent = $("use-fallback").checked ? "Ordered fallback enabled" : "Manual selection";
+  $("fallback-description").textContent = fallbackIds.length
+    ? `After the selected model: ${fallbackIds.map(id => modelConnections.find(m => m.id === id)?.name || "Unavailable model").join(" → ")}. Enabling this can send history to each provider and use credits. No fallback after partial text.`
+    : "Manual selection only. Configure an optional fallback order in Settings.";
   $("send").disabled = sending || !!activeMessage || !providerReady;
   $("stop").hidden = !activeMessage;
   $("rename").disabled = !selected || sending;
@@ -187,6 +193,7 @@ async function openChat(id) {
   const chat = await api(`/conversations/${id}`);
   if (version !== viewVersion) return;
   closeStream();
+  if (selected !== id) $("use-fallback").checked = false;
   selected = id;
   activeMessage = null;
   localStorage.setItem("combinellm-selected", id);
@@ -240,7 +247,7 @@ $("composer").onsubmit = async (event) => {
     const id = selected;
     await api(`/conversations/${id}/messages`, {
       method: "POST",
-      body: JSON.stringify({ content, model_id: $("chat-model").value }),
+      body: JSON.stringify({ content, model_id: $("chat-model").value, fallback: $("use-fallback").checked }),
     });
     $("prompt").value = "";
     await openChat(id);
@@ -369,6 +376,7 @@ async function init() {
   controls();
   refreshBudgets();
 }
+$("use-fallback").onchange = controls;
 $("chat-model").onchange = () => {
   refreshBudgets();
   controls();

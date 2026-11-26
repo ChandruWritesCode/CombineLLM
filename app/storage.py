@@ -23,7 +23,7 @@ class Store:
         with self.connect() as db:
             db.execute("PRAGMA journal_mode=WAL")
             version = db.execute("PRAGMA user_version").fetchone()[0]
-            if version > 3:
+            if version > 4:
                 raise RuntimeError("Database is newer than this application; do not downgrade.")
             if version == 0:
                 db.executescript("""
@@ -74,6 +74,14 @@ class Store:
                     ALTER TABLE usage_events ADD COLUMN output_price_per_million TEXT;
                     ALTER TABLE usage_events ADD COLUMN estimated_cost_usd TEXT;
                     PRAGMA user_version=3;
+                    COMMIT;
+                """)
+            if version < 4:
+                db.executescript("""
+                    BEGIN IMMEDIATE;
+                    ALTER TABLE usage_events ADD COLUMN attempt_group_id TEXT;
+                    ALTER TABLE usage_events ADD COLUMN attempt_number INTEGER;
+                    PRAGMA user_version=4;
                     COMMIT;
                 """)
             db.execute("UPDATE usage_events SET status='interrupted' WHERE status='running'")
@@ -219,6 +227,18 @@ class Store:
                 (title, now(), conversation_id),
             )
             return answer_id, request
+
+    def attribute_answer(self, message_id, provider):
+        with self.connect() as db:
+            db.execute(
+                "UPDATE messages SET provider=?,model=?,model_id=? WHERE id=?",
+                (
+                    provider.name,
+                    provider.model,
+                    getattr(provider, "response_model_id", getattr(provider, "model_id", None)),
+                    message_id,
+                ),
+            )
 
     def save_answer(self, message_id, content, status, error=None, finish=None, usage=None):
         with self.connect() as db:

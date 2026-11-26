@@ -33,6 +33,7 @@ class Turn(BaseModel):
     content: str = Field(min_length=1, max_length=50000)
     max_output_tokens: int | None = Field(default=None, ge=1, le=8192)
     model_id: str | None = None
+    fallback: bool = False
 
 
 class Generations:
@@ -50,6 +51,7 @@ class Generations:
         try:
             async with aclosing(provider.stream(request)) as events:
                 async for event in events:
+                    self.store.attribute_answer(message_id, provider)
                     if event.kind == "delta":
                         content += event.text
                         self.store.save_answer(message_id, content, "streaming")
@@ -64,9 +66,11 @@ class Generations:
                         return
             raise ProviderError("incomplete_response", "Provider stream ended before completion.")
         except asyncio.CancelledError:
+            self.store.attribute_answer(message_id, provider)
             self.store.save_answer(message_id, content, "cancelled", error="Response stopped.")
             raise
         except ProviderError as exc:
+            self.store.attribute_answer(message_id, provider)
             self.store.save_answer(message_id, content, "failed", error=exc.message)
         except Exception:
             # Do not log raw provider exception text or credentials.

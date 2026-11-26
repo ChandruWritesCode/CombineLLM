@@ -343,3 +343,7 @@ select {
     }
 }
 #budget-notice { padding: 12px 24px; background: #352e1c; color: #ffe3a0; font-size: 0.85rem; }
+
+.fallback-control { padding: 10px 24px; display: grid; gap: 6px; font-size: 0.85rem; }
+.fallback-control input { width: auto; margin-right: 6px; }
+.fallback-control small { color: var(--muted); }

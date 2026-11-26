@@ -35,6 +35,8 @@ class TrackedProvider:
         self.max_output_tokens = config.get("max_output_tokens", 2048)
         self.system_prompt = config.get("system_prompt", "")
         self.source = source
+        self.attempt_group_id = str(uuid4())
+        self.attempt_number = 1
         self.input_price = config.get("input_price_per_million")
         self.output_price = config.get("output_price_per_million")
 
@@ -50,8 +52,8 @@ class TrackedProvider:
             db.execute(
                 """INSERT INTO usage_events
                 (id,model_id,label,provider,model,source,status,started_at,
-                 input_price_per_million,output_price_per_million)
-                VALUES (?,?,?,?,?,?,'running',?,?,?)""",
+                 input_price_per_million,output_price_per_million,attempt_group_id,attempt_number)
+                VALUES (?,?,?,?,?,?,'running',?,?,?,?,?)""",
                 (
                     event_id,
                     self.model_id,
@@ -62,6 +64,8 @@ class TrackedProvider:
                     now(),
                     self.input_price,
                     self.output_price,
+                    self.attempt_group_id,
+                    self.attempt_number,
                 ),
             )
         try:
@@ -282,6 +286,8 @@ async def export_usage(
         "input_price_per_million",
         "output_price_per_million",
         "estimated_cost_usd",
+        "attempt_group_id",
+        "attempt_number",
     ]
     buffer = io.StringIO()
     writer = csv.writer(buffer)

@@ -94,3 +94,12 @@ The tracker captures rates before streaming and calculates Decimal costs from fi
 input/output counts. No retroactive repricing occurs. `app/costs.py` calculates
 current UTC-month advisory budgets including unknown-cost counts. No generation
 path blocks or routes requests based on budgets. See [Phase 5](PHASE_5.md).
+
+## Phase 6 additions
+
+`app/routing.py` composes separately tracked providers only when a chat request
+explicitly enables fallback. Preflight validates the saved order; generation uses
+a bounded transient-error policy and propagates cancellation. Each tracked attempt
+shares a group ID with its chain. Schema 4 adds group/number columns without changing
+past costs. Saved messages receive actual provider attribution while the conversation
+retains the primary model. See [Phase 6](PHASE_6.md) for exact transition rules.

@@ -80,6 +80,13 @@
             </label>
             <p class="full">Budgets are advisory monthly UTC targets. They do not block requests or guarantee a spending cap.</p>
             <div class="full">
+              <h3>Optional fallback order</h3>
+              <p>When you enable fallback in chat, the selected model is tried first, then these models in order. Up to four attempts total, within 120 seconds. Each provider can receive the same conversation and consume quota or credits. Budgets only warn. No fallback after partial text, authentication errors, or content rejection.</p>
+              <label>First fallback<select id="fallback-1"><option value="">None</option></select></label>
+              <label>Second fallback<select id="fallback-2"><option value="">None</option></select></label>
+              <label>Third fallback<select id="fallback-3"><option value="">None</option></select></label>
+            </div>
+            <div class="full">
               <button class="primary" type="submit">Save defaults</button>
             </div>
           </form>
