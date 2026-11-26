@@ -43,6 +43,8 @@ function edit(model = null) {
   $("input-price").value = model?.input_price_per_million ?? "";
   $("output-price").value = model?.output_price_per_million ?? "";
   $("model-budget").value = model?.monthly_budget_usd ?? "";
+  $("usage-group").value = model?.usage_group || "";
+  $("allow-fallback").checked = model?.allow_fallback ?? true;
   $("model-enabled").checked = model?.enabled ?? true;
   $("model-usage").checked = model?.include_usage ?? true;
   $("key-status").textContent = model?.has_key
@@ -183,6 +185,8 @@ $("model-form").onsubmit = async (event) => {
     input_price_per_million: $("input-price").value || null,
     output_price_per_million: $("output-price").value || null,
     monthly_budget_usd: $("model-budget").value || null,
+    usage_group: $("usage-group").value,
+    allow_fallback: $("allow-fallback").checked,
     name: $("model-name").value,
     kind: $("model-kind").value,
     model: $("model-code").value,

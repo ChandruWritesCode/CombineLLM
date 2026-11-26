@@ -219,10 +219,13 @@ def test_v3_migration_preserves_legacy_usage(tmp_path):
         )
         db.execute("ALTER TABLE usage_events DROP COLUMN attempt_group_id")
         db.execute("ALTER TABLE usage_events DROP COLUMN attempt_number")
+        db.execute("DROP TABLE cooldowns")
+        db.execute("ALTER TABLE messages DROP COLUMN attempt_group_id")
+        db.execute("ALTER TABLE usage_events DROP COLUMN usage_group")
         db.execute("PRAGMA user_version=3")
     store = Store(path)
     with store.connect() as db:
         row = db.execute("SELECT * FROM usage_events").fetchone()
         assert row["estimated_cost_usd"] == "0.1"
         assert row["attempt_group_id"] is None
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 4
+        assert db.execute("PRAGMA user_version").fetchone()[0] == 5

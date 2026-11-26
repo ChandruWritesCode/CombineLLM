@@ -51,6 +51,7 @@ function controls() {
     (m) => m.id === $("chat-model").value && m.enabled,
   );
   $("chat-model").disabled = sending || !!activeMessage;
+  $("local-only").disabled = sending || !!activeMessage;
   const fallbackIds = workspacePreferences.fallback_model_ids || [];
   $("use-fallback").disabled = sending || !!activeMessage || !fallbackIds.length;
   $("provider-state").textContent = $("use-fallback").checked ? "Ordered fallback enabled" : "Manual selection";
@@ -119,6 +120,18 @@ function drawMessage(message) {
     message.content ||
     (message.status === "streaming" ? "Thinking…" : "No answer was generated.");
   article.append(head, content);
+  if (message.attempts?.length) {
+    const attempts = document.createElement("details");
+    const summary = document.createElement("summary");
+    summary.textContent = `Model attempts (${message.attempts.length})`;
+    attempts.append(summary);
+    for (const attempt of message.attempts) {
+      const line = document.createElement("p");
+      line.textContent = `${attempt.attempt_number}. ${attempt.label} (${attempt.model}): ${attempt.status}${attempt.error_code ? " — " + attempt.error_code.replaceAll("_", " ") : ""}`;
+      attempts.append(line);
+    }
+    article.append(attempts);
+  }
   if (message.error) {
     const error = document.createElement("div");
     error.className = "message-error";
@@ -247,7 +260,7 @@ $("composer").onsubmit = async (event) => {
     const id = selected;
     await api(`/conversations/${id}/messages`, {
       method: "POST",
-      body: JSON.stringify({ content, model_id: $("chat-model").value, fallback: $("use-fallback").checked }),
+      body: JSON.stringify({ content, model_id: $("chat-model").value, fallback: $("use-fallback").checked, local_only: $("local-only").checked }),
     });
     $("prompt").value = "";
     await openChat(id);

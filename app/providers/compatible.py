@@ -56,7 +56,9 @@ class APIProvider:
                 timeout=timeout, transport=self.transport, follow_redirects=False
             ) as client:
                 async with client.stream("POST", url, json=body, headers=headers) as response:
-                    GeminiProvider._check_status(response.status_code)
+                    GeminiProvider._check_status(
+                        response.status_code, response.headers.get("retry-after")
+                    )
                     async for data in GeminiProvider._events(response, deadline):
                         if data.get("_done"):
                             ended = True

@@ -6,9 +6,15 @@ from contextlib import aclosing
 from fastapi import HTTPException
 
 from app.model_api import build_provider
+from app.policies import is_local
 from app.providers.base import ProviderError
 
-RETRYABLE = {"provider_rate_limited", "provider_unavailable", "provider_timeout"}
+RETRYABLE = {
+    "provider_rate_limited",
+    "provider_unavailable",
+    "provider_timeout",
+    "provider_cooldown",
+}
 CHAIN_TIMEOUT_SECONDS = 120
 
 
@@ -79,7 +85,11 @@ class FallbackProvider:
             raise ProviderError("provider_timeout", "Fallback time limit reached.", 504) from exc
 
 
-def select_provider(app, model_id, source, fallback=False):
+def select_provider(app, model_id, source, fallback=False, local_only=False):
+    registry = app.state.connections
+    selected = model_id or registry.preferences().default_model_id
+    if local_only and selected and not is_local(registry.get(selected)):
+        raise HTTPException(422, "Local-only mode requires a local endpoint.")
     primary = build_provider(app, model_id, source)
     if not fallback:
         return primary
@@ -91,5 +101,11 @@ def select_provider(app, model_id, source, fallback=False):
     if not ids:
         raise HTTPException(422, "Configure at least one different fallback model in Settings.")
     # Validate the entire explicit chain before sending any prompt.
+    for mid in ids:
+        config = registry.get(mid)
+        if not config.get("allow_fallback", True):
+            raise HTTPException(422, "A configured model does not allow fallback.")
+        if local_only and not is_local(config):
+            raise HTTPException(422, "Local-only mode rejects cloud fallback endpoints.")
     providers = [primary] + [build_provider(app, mid, source) for mid in ids]
     return FallbackProvider(providers)

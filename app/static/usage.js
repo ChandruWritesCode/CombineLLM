@@ -18,6 +18,7 @@ async function refresh() {
     ["Requests", data.requests],
     ["Completed", data.complete],
     ["Failed", data.failed],
+    ["Skipped (cooldown)", data.skipped],
     ["Reported tokens", data.reported_tokens],
     ["Unknown usage", data.unknown_usage],
   ]) {
@@ -72,6 +73,11 @@ async function refresh() {
       row.append(node("td", value));
     $("recent-body").append(row);
   }
+  const groups = await api("/usage-groups");
+  if (version !== refreshVersion) return;
+  $("usage-groups").replaceChildren();
+  for (const group of groups) $("usage-groups").append(node("p", `${group.name}: ${group.requests} attempts, ${group.reported_tokens} reported tokens, ${group.cooldown_seconds}s cooldown remaining`));
+  if (!groups.length) $("usage-groups").append(node("p", "No shared usage groups configured."));
   notice();
 }
 $("filters").onsubmit = (event) => {

@@ -1,5 +1,14 @@
 # Changelog
 
+## Phase 7 — shared cooldowns and routing controls
+
+- Added persistent Retry-After cooldowns shared by user-defined usage groups.
+- Added fallback permission and local-endpoint-only request restrictions.
+- Added attempt details in saved chats, group usage totals and skipped attempt counts.
+- Improved sanitized diagnostics; schema 5 preserves earlier history and costs.
+- Budgets remain advisory; no quota inference or automatic task coordination.
+
+
 ## Phase 6 — opt-in ordered fallback
 
 - Added a saved order of up to three fallback connections and an explicit chat toggle.

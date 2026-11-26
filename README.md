@@ -1,7 +1,7 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 6 — opt-in ordered fallback.**
+**Current release: Phase 7 — shared cooldowns and routing controls.**
 
 Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
 Provider availability depends on the service and your account; backend health does
@@ -133,6 +133,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Phase 4: connections and usage](docs/PHASE_4.md) — settings, credentials, login and statistics.
 - [Phase 5: budgets and estimates](docs/PHASE_5.md) — manual rates, warnings and limitations.
 - [Phase 6: ordered fallback](docs/PHASE_6.md) — opt-in routing, attempt limits and policy.
+- [Phase 7: routing controls](docs/PHASE_7.md) — shared cooldowns, local-only policy and attempt history.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.

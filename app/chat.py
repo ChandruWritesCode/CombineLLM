@@ -22,6 +22,7 @@ async def get_provider(request: Request) -> ChatProvider:
         model_id,
         "saved_chat" if conversation_id else "stateless_chat",
         fallback=isinstance(body, dict) and body.get("fallback") is True,
+        local_only=isinstance(body, dict) and body.get("local_only") is True,
     )
 
 

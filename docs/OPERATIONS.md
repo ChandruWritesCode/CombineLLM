@@ -133,3 +133,9 @@ consume quota on multiple providers. Disabled choices require a settings update.
 Stop closes the active attempt. No fallback occurs after partial output, on content
 rejection or on authentication errors. See [Phase 6](PHASE_6.md) for the bounded
 policy; successful live cloud generation is still unverified.
+
+## Phase 7 routing controls
+
+Schema 5 persists shared cooldowns and links saved answers to attempt groups.
+See [Phase 7](PHASE_7.md) for configuration, endpoint restrictions and limits.
+Groq live generation was reported working by the user before this phase.

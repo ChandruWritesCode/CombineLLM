@@ -15,6 +15,7 @@ from pydantic import SecretStr
 from app.config import Settings
 from app.connections import Connection, Preferences
 from app.costs import current_budgets, estimate, total_cost
+from app.policies import cool_down, remaining
 from app.providers.base import ProviderError
 from app.providers.compatible import APIProvider
 from app.providers.gemini import GeminiProvider
@@ -35,6 +36,10 @@ class TrackedProvider:
         self.max_output_tokens = config.get("max_output_tokens", 2048)
         self.system_prompt = config.get("system_prompt", "")
         self.source = source
+        self.usage_group = config.get("usage_group", "")
+        self.pool = (
+            "group:" + self.usage_group if self.usage_group else "model:" + str(self.model_id)
+        )
         self.attempt_group_id = str(uuid4())
         self.attempt_number = 1
         self.input_price = config.get("input_price_per_million")
@@ -52,8 +57,8 @@ class TrackedProvider:
             db.execute(
                 """INSERT INTO usage_events
                 (id,model_id,label,provider,model,source,status,started_at,
-                 input_price_per_million,output_price_per_million,attempt_group_id,attempt_number)
-                VALUES (?,?,?,?,?,?,'running',?,?,?,?,?)""",
+                 input_price_per_million,output_price_per_million,attempt_group_id,attempt_number,usage_group)
+                VALUES (?,?,?,?,?,?,'running',?,?,?,?,?,?)""",
                 (
                     event_id,
                     self.model_id,
@@ -66,9 +71,18 @@ class TrackedProvider:
                     self.output_price,
                     self.attempt_group_id,
                     self.attempt_number,
+                    self.usage_group,
                 ),
             )
         try:
+            wait = remaining(self.store, self.pool)
+            if wait:
+                status = "skipped"
+                raise ProviderError(
+                    "provider_cooldown",
+                    f"Shared quota cooldown: try again in {int(wait) + 1} seconds.",
+                    429,
+                )
             async with aclosing(self.provider.stream(request)) as events:
                 async for event in events:
                     if event.kind == "done":
@@ -84,6 +98,8 @@ class TrackedProvider:
             raise
         except ProviderError as exc:
             error = exc.code
+            if exc.code == "provider_rate_limited":
+                cool_down(self.store, self.pool, exc.retry_after)
             raise
         finally:
             with self.store.connect() as db:
@@ -232,6 +248,7 @@ async def get_usage(
                 "cancelled": 0,
                 "interrupted": 0,
                 "running": 0,
+                "skipped": 0,
                 "reported_tokens": 0,
                 "unknown_usage": 0,
                 "duration_ms": 0,
@@ -256,6 +273,7 @@ async def get_usage(
         "unknown_usage": sum(r["total_tokens"] is None for r in rows),
         "complete": sum(r["status"] == "complete" for r in rows),
         "failed": sum(r["status"] == "failed" for r in rows),
+        "skipped": sum(r["status"] == "skipped" for r in rows),
         "models": list(groups.values()),
         "recent": rows[:100],
         "scope": "Requests through CombineLLM since Phase 4; not account-wide usage or billing.",
@@ -288,6 +306,7 @@ async def export_usage(
         "estimated_cost_usd",
         "attempt_group_id",
         "attempt_number",
+        "usage_group",
     ]
     buffer = io.StringIO()
     writer = csv.writer(buffer)
@@ -307,3 +326,30 @@ async def export_usage(
         media_type="text/csv",
         headers={"Content-Disposition": 'attachment; filename="combinellm-usage.csv"'},
     )
+
+
+@router.get("/usage-groups")
+async def usage_groups(request: Request):
+    registry = request.app.state.connections
+    groups = {}
+    for model in registry.list():
+        label = model.get("usage_group", "")
+        if label:
+            groups.setdefault(label, {"requests": 0, "reported_tokens": 0})
+    with registry.store.connect() as db:
+        for row in db.execute(
+            "SELECT usage_group,count(*) AS requests,coalesce(sum(total_tokens),0) AS tokens "
+            "FROM usage_events WHERE usage_group != '' GROUP BY usage_group"
+        ):
+            groups[row["usage_group"]] = {
+                "requests": row["requests"],
+                "reported_tokens": row["tokens"],
+            }
+    return [
+        {
+            "name": name,
+            **totals,
+            "cooldown_seconds": int(remaining(registry.store, "group:" + name)),
+        }
+        for name, totals in groups.items()
+    ]

@@ -103,3 +103,9 @@ a bounded transient-error policy and propagates cancellation. Each tracked attem
 shares a group ID with its chain. Schema 4 adds group/number columns without changing
 past costs. Saved messages receive actual provider attribution while the conversation
 retains the primary model. See [Phase 6](PHASE_6.md) for exact transition rules.
+
+## Phase 7 routing controls
+
+Schema 5 persists shared cooldowns and links saved answers to attempt groups.
+See [Phase 7](PHASE_7.md) for configuration, endpoint restrictions and limits.
+Groq live generation was reported working by the user before this phase.

@@ -19,12 +19,13 @@ Each phase should leave the application runnable.
 6. **Ordered fallback (implemented):** opt-in primary plus up to three fallback
    connections, transient pre-output failures only, 120-second total deadline,
    per-attempt accounting and accurate response attribution. Manual mode remains default.
-7. **Advanced policies (future):** cooldowns, capability discovery, shared quota
-   pools and conservative hard-budget reservations, with explicit provider policies.
+7. **Routing controls (implemented):** persistent shared cooldowns, usage groups,
+   fallback permissions, local endpoint restrictions and chat attempt history.
+   Capability discovery and hard-budget reservations remain future work.
 8. **Coordinated models (future):** draft/review, bounded task splitting, synthesis
    and quality/cost evaluations.
 
 The scope was revised at the user's request: settings and basic usage moved into
 Phase 4; ordered fallback is now opt-in; intelligent coordination remains deferred. Website subscriptions do
 not automatically grant API access. See [Phase 4](PHASE_4.md), [the changelog](../CHANGELOG.md)
-[Phase 5](PHASE_5.md), [Phase 6](PHASE_6.md) and [Git workflow](CONTRIBUTING.md). Live cloud success remains unverified.
+[Phase 5](PHASE_5.md), [Phase 6](PHASE_6.md) and [Git workflow](CONTRIBUTING.md). The user reported successful live Groq generation after Phase 6.

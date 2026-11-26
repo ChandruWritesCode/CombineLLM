@@ -8,6 +8,7 @@ from collections.abc import AsyncIterator
 import httpx
 
 from app.config import Settings
+from app.policies import retry_delay
 from app.providers.base import ProviderError, ProviderEvent
 from app.schemas import ChatRequest, Usage
 
@@ -56,7 +57,7 @@ class GeminiProvider:
                 async with client.stream(
                     "POST", url, headers={"x-goog-api-key": self._key}, json=body
                 ) as response:
-                    self._check_status(response.status_code)
+                    self._check_status(response.status_code, response.headers.get("retry-after"))
                     usage = Usage()
                     finish = ""
                     has_text = False
@@ -109,22 +110,27 @@ class GeminiProvider:
             ) from exc
 
     @staticmethod
-    def _check_status(status: int) -> None:
+    def _check_status(status: int, retry_after=None) -> None:
         if 200 <= status < 300:
             return
         if status in {401, 403}:
             raise ProviderError(
-                "provider_auth_error", "Check your API credential and model access.", 502
+                "provider_auth_error",
+                "Authentication failed: check the API key and account/model permissions.",
+                502,
             )
         if status == 429:
             raise ProviderError(
                 "provider_rate_limited",
-                "Provider quota or rate limit reached. Try again later.",
+                "Provider quota or rate limit reached. A shared cooldown now applies.",
                 429,
+                retry_after=retry_delay(retry_after),
             )
         if status in {400, 404}:
             raise ProviderError(
-                "provider_request_rejected", "Check the configured model and request limits.", 502
+                "provider_request_rejected",
+                "Request rejected: check the model ID, supported parameters and account access.",
+                502,
             )
         raise ProviderError("provider_unavailable", "Provider is temporarily unavailable.", 502)
 

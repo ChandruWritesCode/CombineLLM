@@ -226,6 +226,8 @@
             <input id="model-budget" type="number" min="0" max="1000000" step="0.00000001" placeholder="No budget" />
           </label>
           <p class="full">Enter your own prices. Blank means unknown; zero means a zero-price estimate. Prices apply only to future requests. Estimates exclude discounts, special cache rates and extra charges. Budgets only warn; they never stop spending.</p>
+          <label>Shared usage group<input id="usage-group" maxlength="100" placeholder="Same label for the same quota pool" /></label>
+          <label class="check"><input id="allow-fallback" type="checkbox" checked />Allow as a fallback destination</label>
           <label class="check"
             ><input id="model-enabled" type="checkbox" checked />Enabled in
             chat</label

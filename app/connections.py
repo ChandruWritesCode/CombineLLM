@@ -25,6 +25,8 @@ class Connection(BaseModel):
     api_key: SecretStr | None = None
     clear_key: bool = False
     enabled: bool = True
+    allow_fallback: bool = True
+    usage_group: str = Field(default="", max_length=100)
     timeout_seconds: float = Field(default=60, ge=1, le=300)
     max_output_tokens: int = Field(default=2048, ge=1, le=8192)
     temperature: float | None = Field(default=None, ge=0, le=2)

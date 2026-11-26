@@ -23,7 +23,7 @@ class Store:
         with self.connect() as db:
             db.execute("PRAGMA journal_mode=WAL")
             version = db.execute("PRAGMA user_version").fetchone()[0]
-            if version > 4:
+            if version > 5:
                 raise RuntimeError("Database is newer than this application; do not downgrade.")
             if version == 0:
                 db.executescript("""
@@ -84,6 +84,15 @@ class Store:
                     PRAGMA user_version=4;
                     COMMIT;
                 """)
+            if version < 5:
+                db.executescript("""
+                    BEGIN IMMEDIATE;
+                    CREATE TABLE cooldowns (pool TEXT PRIMARY KEY, until REAL NOT NULL);
+                    ALTER TABLE usage_events ADD COLUMN usage_group TEXT;
+                    ALTER TABLE messages ADD COLUMN attempt_group_id TEXT;
+                    PRAGMA user_version=5;
+                    COMMIT;
+                """)
             db.execute("UPDATE usage_events SET status='interrupted' WHERE status='running'")
             db.execute(
                 "UPDATE messages SET status='interrupted', error=? WHERE status='streaming'",
@@ -135,6 +144,8 @@ class Store:
                     (conversation_id,),
                 )
             ]
+            for message in result["messages"]:
+                message["attempts"] = self.attempts(db, message.get("attempt_group_id"))
             return result
 
     @staticmethod
@@ -228,14 +239,30 @@ class Store:
             )
             return answer_id, request
 
+    @staticmethod
+    def attempts(db, group):
+        return (
+            [
+                dict(r)
+                for r in db.execute(
+                    "SELECT label,model,status,error_code,attempt_number FROM usage_events "
+                    "WHERE attempt_group_id=? ORDER BY attempt_number",
+                    (group,),
+                )
+            ]
+            if group
+            else []
+        )
+
     def attribute_answer(self, message_id, provider):
         with self.connect() as db:
             db.execute(
-                "UPDATE messages SET provider=?,model=?,model_id=? WHERE id=?",
+                "UPDATE messages SET provider=?,model=?,model_id=?,attempt_group_id=? WHERE id=?",
                 (
                     provider.name,
                     provider.model,
                     getattr(provider, "response_model_id", getattr(provider, "model_id", None)),
+                    getattr(provider, "attempt_group_id", None),
                     message_id,
                 ),
             )
@@ -263,4 +290,6 @@ class Store:
             ).fetchone()
             if row is None:
                 raise HTTPException(404, "Message not found")
-            return self.decode(row)
+            result = self.decode(row)
+            result["attempts"] = self.attempts(db, result.get("attempt_group_id"))
+            return result

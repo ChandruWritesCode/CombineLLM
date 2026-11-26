@@ -34,6 +34,7 @@ class Turn(BaseModel):
     max_output_tokens: int | None = Field(default=None, ge=1, le=8192)
     model_id: str | None = None
     fallback: bool = False
+    local_only: bool = False
 
 
 class Generations:
