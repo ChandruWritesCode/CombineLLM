@@ -9,7 +9,13 @@ services:
       COMBINELLM_GEMINI_API_KEY: ${COMBINELLM_GEMINI_API_KEY:-}
       COMBINELLM_GEMINI_MODEL: ${COMBINELLM_GEMINI_MODEL:-}
       COMBINELLM_PROVIDER_TIMEOUT_SECONDS: ${COMBINELLM_PROVIDER_TIMEOUT_SECONDS:-60}
+      COMBINELLM_DATABASE_PATH: /srv/combinellm/data/combinellm.sqlite3
+    volumes:
+      - chat_data:/srv/combinellm/data
     init: true
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
+
+volumes:
+  chat_data:

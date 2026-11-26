@@ -10,9 +10,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/srv/combinellm/.venv/bin:$PATH"
 WORKDIR /srv/combinellm
-RUN useradd --create-home --uid 10001 appuser
+RUN useradd --create-home --uid 10001 appuser \
+    && mkdir -p /srv/combinellm/data \
+    && chown appuser:appuser /srv/combinellm/data
 COPY --from=builder /srv/combinellm/.venv ./.venv
 COPY --chown=appuser:appuser app ./app
+COPY --chown=appuser:appuser scripts ./scripts
 USER appuser
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \

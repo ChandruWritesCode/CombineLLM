@@ -21,7 +21,7 @@ def test_environment_configuration(monkeypatch):
     monkeypatch.setenv("COMBINELLM_ENVIRONMENT", "test")
     settings = Settings(_env_file=None)
     with TestClient(create_app(settings)) as client:
-        assert client.get("/").json()["name"] == "My local workspace"
+        assert client.get("/api/v1").json()["name"] == "My local workspace"
     assert settings.environment == "test"
 
 

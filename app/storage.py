@@ -1,0 +1,203 @@
+"""Small SQLite repository. Transactions never span network calls."""
+
+import json
+import sqlite3
+from contextlib import contextmanager
+from datetime import UTC, datetime
+from pathlib import Path
+from uuid import uuid4
+
+from fastapi import HTTPException
+
+from app.schemas import ChatRequest, Message
+
+
+def now():
+    return datetime.now(UTC).isoformat()
+
+
+class Store:
+    def __init__(self, path: str):
+        self.path = path
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        with self.connect() as db:
+            db.execute("PRAGMA journal_mode=WAL")
+            version = db.execute("PRAGMA user_version").fetchone()[0]
+            if version > 1:
+                raise RuntimeError("Database is newer than this application; do not downgrade.")
+            if version == 0:
+                db.executescript("""
+                    BEGIN IMMEDIATE;
+                    CREATE TABLE conversations (
+                        id TEXT PRIMARY KEY, title TEXT NOT NULL,
+                        created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+                    );
+                    CREATE TABLE messages (
+                        seq INTEGER PRIMARY KEY AUTOINCREMENT,
+                        id TEXT NOT NULL UNIQUE,
+                        conversation_id TEXT NOT NULL
+                            REFERENCES conversations(id) ON DELETE CASCADE,
+                        role TEXT NOT NULL, content TEXT NOT NULL DEFAULT '',
+                        status TEXT NOT NULL, provider TEXT, model TEXT,
+                        finish_reason TEXT, usage TEXT, error TEXT,
+                        created_at TEXT NOT NULL
+                    );
+                    CREATE INDEX messages_conversation ON messages(conversation_id, seq);
+                    PRAGMA user_version=1;
+                    COMMIT;
+                """)
+            db.execute(
+                "UPDATE messages SET status='interrupted', error=? WHERE status='streaming'",
+                (
+                    "The backend restarted before this response finished. "
+                    "You can send the prompt again.",
+                ),
+            )
+
+    @contextmanager
+    def connect(self):
+        db = sqlite3.connect(self.path, timeout=5)
+        db.row_factory = sqlite3.Row
+        db.execute("PRAGMA foreign_keys=ON")
+        try:
+            with db:
+                yield db
+        finally:
+            db.close()
+
+    def list(self):
+        with self.connect() as db:
+            return [
+                dict(r) for r in db.execute("SELECT * FROM conversations ORDER BY updated_at DESC")
+            ]
+
+    def create(self, title):
+        item = {"id": str(uuid4()), "title": title, "created_at": now(), "updated_at": now()}
+        with self.connect() as db:
+            db.execute(
+                "INSERT INTO conversations VALUES (:id,:title,:created_at,:updated_at)", item
+            )
+        return item
+
+    def get(self, conversation_id):
+        with self.connect() as db:
+            row = db.execute(
+                "SELECT * FROM conversations WHERE id=?", (conversation_id,)
+            ).fetchone()
+            if row is None:
+                raise HTTPException(404, "Conversation not found")
+            result = dict(row)
+            result["messages"] = [
+                self.decode(r)
+                for r in db.execute(
+                    "SELECT * FROM messages WHERE conversation_id=? ORDER BY seq",
+                    (conversation_id,),
+                )
+            ]
+            return result
+
+    @staticmethod
+    def decode(row):
+        result = dict(row)
+        result.pop("seq", None)
+        result["usage"] = json.loads(result["usage"]) if result["usage"] else None
+        return result
+
+    def rename(self, conversation_id, title):
+        self.get(conversation_id)
+        with self.connect() as db:
+            db.execute(
+                "UPDATE conversations SET title=?,updated_at=? WHERE id=?",
+                (title, now(), conversation_id),
+            )
+        return self.get(conversation_id)
+
+    def delete(self, conversation_id):
+        self.get(conversation_id)
+        with self.connect() as db:
+            db.execute("DELETE FROM conversations WHERE id=?", (conversation_id,))
+
+    def begin(self, conversation_id, content, max_output_tokens, provider):
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            conversation = db.execute(
+                "SELECT * FROM conversations WHERE id=?", (conversation_id,)
+            ).fetchone()
+            if conversation is None:
+                raise HTTPException(404, "Conversation not found")
+            rows = db.execute(
+                "SELECT * FROM messages WHERE conversation_id=? ORDER BY seq", (conversation_id,)
+            ).fetchall()
+            if any(r["status"] == "streaming" for r in rows):
+                raise HTTPException(409, "A response is already running in this conversation")
+            history = []
+            # Failed/cancelled turns remain visible but never become model context.
+            for previous, answer in zip(rows, rows[1:]):
+                if (
+                    previous["role"] == "user"
+                    and answer["role"] == "assistant"
+                    and answer["status"] == "complete"
+                ):
+                    history.extend(
+                        [
+                            Message(role="user", content=previous["content"]),
+                            Message(role="assistant", content=answer["content"]),
+                        ]
+                    )
+            history.append(Message(role="user", content=content))
+            request = ChatRequest(messages=history, max_output_tokens=max_output_tokens)
+            answer_id = str(uuid4())
+            for role, text, status, message_id in [
+                ("user", content, "complete", str(uuid4())),
+                ("assistant", "", "streaming", answer_id),
+            ]:
+                db.execute(
+                    """INSERT INTO messages
+                    (id,conversation_id,role,content,status,provider,model,created_at)
+                    VALUES (?,?,?,?,?,?,?,?)""",
+                    (
+                        message_id,
+                        conversation_id,
+                        role,
+                        text,
+                        status,
+                        provider.name if role == "assistant" else None,
+                        provider.model if role == "assistant" else None,
+                        now(),
+                    ),
+                )
+            title = (
+                content[:60]
+                if not rows and conversation["title"] == "New conversation"
+                else conversation["title"]
+            )
+            db.execute(
+                "UPDATE conversations SET title=?,updated_at=? WHERE id=?",
+                (title, now(), conversation_id),
+            )
+            return answer_id, request
+
+    def save_answer(self, message_id, content, status, error=None, finish=None, usage=None):
+        with self.connect() as db:
+            db.execute(
+                """UPDATE messages SET content=?,status=?,error=?,finish_reason=?,usage=?
+                          WHERE id=? AND status='streaming'""",
+                (
+                    content,
+                    status,
+                    error,
+                    finish,
+                    json.dumps(usage) if usage is not None else None,
+                    message_id,
+                ),
+            )
+
+    def message(self, conversation_id, message_id):
+        with self.connect() as db:
+            row = db.execute(
+                "SELECT * FROM messages WHERE id=? AND conversation_id=?",
+                (message_id, conversation_id),
+            ).fetchone()
+            if row is None:
+                raise HTTPException(404, "Message not found")
+            return self.decode(row)

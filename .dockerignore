@@ -3,5 +3,9 @@
 !app/**
 !pyproject.toml
 !uv.lock
+!scripts/
+!scripts/**
+scripts/**/__pycache__/
+scripts/**/*.pyc
 app/**/__pycache__/
 app/**/*.pyc

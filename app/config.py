@@ -14,3 +14,4 @@ class Settings(BaseSettings):
     gemini_api_key: SecretStr = SecretStr("")
     gemini_model: str = Field(default="", pattern=r"^[a-zA-Z0-9._-]*$", max_length=100)
     provider_timeout_seconds: float = Field(default=60, ge=1, le=300)
+    database_path: str = "data/combinellm.sqlite3"

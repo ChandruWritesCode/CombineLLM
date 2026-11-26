@@ -1,107 +1,140 @@
 # CombineLLM
 
-A self-hosted workspace for multiple LLM providers. **Phase 2: first model connection.**
-The backend supports Gemini text chat, optional streaming, provider configuration
-status, and per-response token usage. Conversation storage and a chat UI come next.
+A local, self-hosted chat workspace that will bring multiple LLM providers together.
+**Current release: Phase 3 — saved conversations and a browser chat interface.**
 
-See [the Phase 2 setup and examples](docs/PHASE_2.md) to configure a Gemini key and
-model, then send your first message. Without credentials the backend still starts,
-but chat returns a clear configuration error.
+The backend currently integrates Gemini. Provider availability depends on Google
+and your account; a healthy backend does not guarantee a successful model response.
 
-## Run with Docker in VS Code
+## Start in VS Code
 
-Open this folder in VS Code, then choose **Terminal → New Terminal**.
-Docker Engine must be running, with Docker Compose installed.
+Open this folder, then open **Terminal → New Terminal**:
 
 ```bash
 cp -n .env.example .env
 docker compose up --build -d --wait
 ```
 
-Open [API docs](http://localhost:8000/docs) or
-[health](http://localhost:8000/api/v1/health). The health response is `{"status":"ok"}`.
-In the docs, expand the health endpoint, choose **Try it out**, then **Execute**.
+This workspace uses port **8001** in `.env`:
 
-```bash
-docker compose ps
-docker compose logs -f backend
-docker compose down
+- [Chat workspace](http://localhost:8001/)
+- [Interactive API documentation](http://localhost:8001/docs)
+- [Backend health](http://localhost:8001/api/v1/health)
+
+Fresh installations default to port 8000; use the port set in your `.env`.
+The container runs as a non-root user and listens on your machine only.
+
+## Connect Gemini
+
+Edit `.env` in VS Code:
+
+```dotenv
+COMBINELLM_GEMINI_API_KEY=your-key
+COMBINELLM_GEMINI_MODEL=your-available-text-model-id
 ```
 
-The container runs as a non-root user and the published port is restricted to your
-own machine. This phase has no authentication; keep that local binding.
-If port 8000 is occupied, change `COMBINELLM_PORT` in `.env` and run Compose again.
-Use the new port in your browser. Rebuild after source changes.
+Get a key from [Google AI Studio](https://aistudio.google.com/apikey). Choose a text
+model available to your account; listing a model does not prove your account can
+successfully generate with it. Check account limits and billing before use.
+Credentials stay on the backend. `.env` is plaintext, ignored by Git, and excluded
+from the image. Never commit it or share it in chat.
 
-For this workspace, `.env` currently selects port **8001** because 8000 was already
-occupied. Open <http://localhost:8001/docs>. The copy command above preserves an
-existing `.env`.
+Apply configuration changes:
 
-## Develop locally in VS Code
+```bash
+docker compose up -d --wait
+```
 
-Install [uv](https://docs.astral.sh/uv/getting-started/installation/) if needed.
-uv uses `.python-version` to select Python 3.12 and can download it automatically.
-Run from the project root:
+Use `--build` as well after changing source or dependencies. See
+[the Gemini setup guide](docs/PHASE_2.md) for API examples and provider error codes.
+
+## What works now
+
+- Create, open, rename, and delete saved conversations.
+- See incremental responses and stop an in-progress generation.
+- Resume viewing a response after refreshing or switching conversations.
+- Keep prompts and partial answers when a provider fails.
+- Reuse a prompt and send it again explicitly; no automatic retries.
+- View model attribution, completion status, and reported token totals.
+- Preserve chats across Docker container rebuilds using a named SQLite volume.
+
+Failed, cancelled, and interrupted turns remain visible but are excluded from
+future model context. Successful turns are sent as history on subsequent messages.
+Cloud prompts leave your machine; this is not offline inference. No account login,
+paid-use cap, automatic fallback, or multi-user support exists yet.
+
+## Develop without Docker
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then:
 
 ```bash
 uv sync --locked
 uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8002
 ```
 
-Open <http://localhost:8002/docs>. Stop with Ctrl+C. Native development uses port
-8002 so it can run alongside the Docker instance.
-Local development automatically reloads after code changes.
+Open [the development workspace](http://localhost:8002/). Changes to Python reload
+automatically; refresh the page after CSS or JavaScript changes. Restart after
+changing `.env`. For breakpoints, install the recommended VS Code Python extensions,
+select `.venv/bin/python`, and press **F5**. Stop any server using port 8002 first.
 
-For breakpoints, install the recommended Python extensions, select `.venv/bin/python`
-with **Python: Select Interpreter**, then press **F5** and choose
-**CombineLLM: debug backend**. Stop any existing server first. The debugger runs
-without auto-reload to keep breakpoint behavior predictable.
+Native development stores chats in `data/combinellm.sqlite3`. Docker uses a separate
+named volume. Each mode has its own history. Run exactly **one backend process**
+per database: the current generation manager and restart recovery assume this.
 
-## Validate changes
+## Checks
 
 ```bash
-uv run pytest
+uv run pytest -q
 uv run ruff check .
 uv run ruff format --check .
+node --check app/static/app.js
 docker compose config --quiet
 ```
 
-`uv.lock` locks dependencies for local and Docker installs. After intentionally
-changing dependencies, run `uv lock`, then `uv sync` and the checks above.
+Node is only needed for the optional JavaScript syntax check; the frontend has no
+build step or package installation. Automated provider tests use simulated
+responses and do not spend API credits. Tests use temporary databases.
 
 ## Configuration
 
-Copy `.env.example` to `.env` for optional overrides. Environment variables take
-precedence over `.env` for native runs. Compose passes the listed settings into the
-container; `.env` is not copied into the image.
-
 | Variable | Default | Meaning |
 | --- | --- | --- |
-| `COMBINELLM_APP_NAME` | `CombineLLM` | API title and service name |
-| `COMBINELLM_ENVIRONMENT` | `development` | `development`, `test`, or `production`; currently metadata only |
-| `COMBINELLM_PORT` | `8000` | Compose host port; native port is set in the run command |
-| `COMBINELLM_GEMINI_API_KEY` | empty | Backend-only Gemini API key |
-| `COMBINELLM_GEMINI_MODEL` | empty | Text model ID available to your account, without `models/` |
-| `COMBINELLM_PROVIDER_TIMEOUT_SECONDS` | `60` | Provider timeout, from 1 to 300 seconds |
+| `COMBINELLM_APP_NAME` | `CombineLLM` | Service name in API metadata |
+| `COMBINELLM_ENVIRONMENT` | `development` | Validated environment label |
+| `COMBINELLM_PORT` | `8000` | Docker host port |
+| `COMBINELLM_GEMINI_API_KEY` | empty | Backend-only provider credential |
+| `COMBINELLM_GEMINI_MODEL` | empty | Text model ID, without `models/` |
+| `COMBINELLM_PROVIDER_TIMEOUT_SECONDS` | `60` | Provider timeout (1–300 seconds) |
+| `COMBINELLM_DATABASE_PATH` | `data/combinellm.sqlite3` | Native database path; Compose fixes its own volume path |
 
-## Layout
+Environment variables override `.env`. The container only receives the settings
+listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes.
+
+## Project documentation
+
+- [Development roadmap](docs/ROADMAP.md) — scope and completion of each phase.
+- [Phase 2: Gemini setup](docs/PHASE_2.md) — stateless API, errors, and streaming.
+- [Phase 3: saved chat](docs/PHASE_3.md) — UI behavior and conversation API.
+- [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
+- [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
+- [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.
+- [Changelog](CHANGELOG.md) — user-facing changes and known limits.
+
+## Source layout
 
 ```text
-app/config.py       Validated settings
-app/main.py         FastAPI app and service/health endpoints
-app/chat.py         Chat and provider status routes
-app/schemas.py      Provider-neutral request and response formats
-app/providers/     Adapter interface and Gemini REST implementation
-tests/              API and configuration checks
-.vscode/            Editor and debugger configuration
-Dockerfile          Container build and health check
-compose.yaml        Local Docker setup
-docs/ROADMAP.md     Six development phases
+app/main.py             Application lifecycle, routes, static frontend
+app/config.py           Environment settings
+app/chat.py             Original stateless chat endpoint
+app/conversations.py    Saved chat endpoints and generation tasks
+app/storage.py          SQLite repository and versioned migrations
+app/schemas.py          Provider-neutral chat messages
+app/providers/          Gemini adapter and provider interface
+app/static/             HTML, CSS, and JavaScript frontend
+scripts/backup.py       Consistent SQLite backup utility
+tests/                 API, storage, lifecycle, and adapter tests
 ```
 
-The health endpoint checks process liveness, not provider or database availability.
-The provider status endpoint checks configuration presence, not key validity or quota.
-See [the roadmap](docs/ROADMAP.md) for the next phases.
-
-Container setup follows the [FastAPI Docker guidance](https://fastapi.tiangolo.com/deployment/docker/)
-and [uv Docker integration guidance](https://docs.astral.sh/uv/guides/integration/docker/).
+To stop Docker without losing chats: `docker compose down`. Do not add `-v` unless
+you intend to delete the saved-chat volume. See the operations guide before restoring
+or relocating a database.
