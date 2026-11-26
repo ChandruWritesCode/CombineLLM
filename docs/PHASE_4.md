@@ -105,3 +105,7 @@ existing Gemini and saved-chat tests remain in place. Registry tests cover secre
 redaction, encrypted storage, endpoint changes, selection failures and multiple
 connections. Other checks cover PKCE exchange/replay, usage filtering/export,
 v1-to-v2 history migration, and backup restoration with the matching encryption key.
+
+Release checks: 55 tests passed, required code/Compose checks passed, and the Docker
+container rebuilt and reported healthy. Browser checks confirmed the Settings,
+model editor, Usage and chat selector pages. A pre-upgrade database backup was made.

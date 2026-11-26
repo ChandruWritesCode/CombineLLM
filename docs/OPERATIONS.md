@@ -94,3 +94,11 @@ behavior without claiming the cloud service is available.
   be writable by that user. Default named volumes are initialized by Docker.
 - **Test warning about httpx:** upstream Starlette emits a deprecation warning for
   its test-client transport. Tests still pass; it does not affect provider requests.
+
+## Costs and budget warnings
+
+Configure rates and monthly targets in Settings. Blank prices leave costs unknown;
+changing prices affects future attempts only. Budget targets do not stop requests.
+The current-month budget overview uses UTC and ignores historical table filters.
+If the estimate is incomplete, consult provider billing before relying on it.
+See [Phase 5](PHASE_5.md) for excluded charges and accounting limitations.

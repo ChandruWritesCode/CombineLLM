@@ -40,6 +40,9 @@ function edit(model = null) {
     model?.max_output_tokens || preferences.max_output_tokens || 2048;
   $("model-temperature").value = model?.temperature ?? "";
   if (model) $("model-token-parameter").value = model.token_parameter;
+  $("input-price").value = model?.input_price_per_million ?? "";
+  $("output-price").value = model?.output_price_per_million ?? "";
+  $("model-budget").value = model?.monthly_budget_usd ?? "";
   $("model-enabled").checked = model?.enabled ?? true;
   $("model-usage").checked = model?.include_usage ?? true;
   $("key-status").textContent = model?.has_key
@@ -149,6 +152,8 @@ async function load() {
   }
   $("default-model").value = preferences.default_model_id || "";
   $("default-tokens").value = preferences.max_output_tokens;
+  $("workspace-budget").value = preferences.monthly_budget_usd ?? "";
+  $("budget-warning").value = preferences.budget_warning_percent ?? 80;
   $("default-system").value = preferences.system_prompt;
 }
 $("add-model").onclick = () => edit();
@@ -169,6 +174,9 @@ $("model-form").onsubmit = async (event) => {
   $("model-save").disabled = true;
   $("model-error").hidden = true;
   const body = {
+    input_price_per_million: $("input-price").value || null,
+    output_price_per_million: $("output-price").value || null,
+    monthly_budget_usd: $("model-budget").value || null,
     name: $("model-name").value,
     kind: $("model-kind").value,
     model: $("model-code").value,
@@ -210,6 +218,8 @@ $("defaults-form").onsubmit = async (event) => {
     await api("/settings", {
       method: "PUT",
       body: JSON.stringify({
+        monthly_budget_usd: $("workspace-budget").value || null,
+        budget_warning_percent: Number($("budget-warning").value),
         default_model_id: $("default-model").value || null,
         max_output_tokens: Number($("default-tokens").value),
         system_prompt: $("default-system").value,

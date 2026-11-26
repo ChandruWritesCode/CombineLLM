@@ -12,6 +12,7 @@ from cryptography.fernet import Fernet, InvalidToken
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator, model_validator
 
+from app.costs import Money
 from app.storage import now
 
 
@@ -28,6 +29,9 @@ class Connection(BaseModel):
     max_output_tokens: int = Field(default=2048, ge=1, le=8192)
     temperature: float | None = Field(default=None, ge=0, le=2)
     system_prompt: str = Field(default="", max_length=10000)
+    input_price_per_million: Money | None = None
+    output_price_per_million: Money | None = None
+    monthly_budget_usd: Money | None = None
     include_usage: bool = True
     token_parameter: Literal["max_tokens", "max_completion_tokens"] = "max_tokens"
 
@@ -85,6 +89,8 @@ class Connection(BaseModel):
 class Preferences(BaseModel):
     model_config = ConfigDict(extra="forbid")
     default_model_id: str | None = None
+    monthly_budget_usd: Money | None = None
+    budget_warning_percent: int = Field(default=80, ge=1, le=100)
     max_output_tokens: int = Field(default=2048, ge=1, le=8192)
     system_prompt: str = Field(default="", max_length=10000)
 
@@ -184,7 +190,7 @@ class Connections:
         if body.clear_key:
             key = ""
             auth = "none"
-        config = body.model_dump(exclude={"api_key", "clear_key"})
+        config = body.model_dump(mode="json", exclude={"api_key", "clear_key"})
         credential = self.cipher.encrypt(key.encode()).decode() if key else ""
         with self.store.connect() as db:
             db.execute(

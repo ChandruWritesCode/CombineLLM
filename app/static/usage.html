@@ -51,6 +51,11 @@
             >Export CSV</a
           >
         </form>
+        <section class="panel">
+          <h2>Monthly budget overview</h2>
+          <p>Current UTC month, independent of the filters below. Targets only warn; requests are never blocked. Unknown costs can make spending higher than the estimate.</p>
+          <div id="budgets"></div>
+        </section>
         <div id="summary" class="stats-grid"></div>
         <section class="panel">
           <h2>By model</h2>
@@ -64,7 +69,7 @@
                   <th>Failed</th>
                   <th>Stopped / interrupted</th>
                   <th>Reported tokens</th>
-                  <th>Unknown usage</th>
+                  <th>Unknown usage</th><th>Estimated USD</th><th>Unknown cost</th>
                 </tr>
               </thead>
               <tbody id="models-body"></tbody>
@@ -88,7 +93,7 @@
                   <th>Input</th>
                   <th>Output</th>
                   <th>Total</th>
-                  <th>Duration</th>
+                  <th>Duration</th><th>Estimated USD</th>
                 </tr>
               </thead>
               <tbody id="recent-body"></tbody>

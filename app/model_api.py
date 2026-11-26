@@ -6,6 +6,7 @@ import io
 import time
 from contextlib import aclosing
 from datetime import date
+from decimal import Decimal
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Query, Request, Response
@@ -13,6 +14,7 @@ from pydantic import SecretStr
 
 from app.config import Settings
 from app.connections import Connection, Preferences
+from app.costs import current_budgets, estimate, total_cost
 from app.providers.base import ProviderError
 from app.providers.compatible import APIProvider
 from app.providers.gemini import GeminiProvider
@@ -33,6 +35,8 @@ class TrackedProvider:
         self.max_output_tokens = config.get("max_output_tokens", 2048)
         self.system_prompt = config.get("system_prompt", "")
         self.source = source
+        self.input_price = config.get("input_price_per_million")
+        self.output_price = config.get("output_price_per_million")
 
     async def stream(self, request):
         if request.system is None and self.system_prompt:
@@ -45,9 +49,20 @@ class TrackedProvider:
         with self.store.connect() as db:
             db.execute(
                 """INSERT INTO usage_events
-                (id,model_id,label,provider,model,source,status,started_at)
-                VALUES (?,?,?,?,?,?,'running',?)""",
-                (event_id, self.model_id, self.label, self.name, self.model, self.source, now()),
+                (id,model_id,label,provider,model,source,status,started_at,
+                 input_price_per_million,output_price_per_million)
+                VALUES (?,?,?,?,?,?,'running',?,?,?)""",
+                (
+                    event_id,
+                    self.model_id,
+                    self.label,
+                    self.name,
+                    self.model,
+                    self.source,
+                    now(),
+                    self.input_price,
+                    self.output_price,
+                ),
             )
         try:
             async with aclosing(self.provider.stream(request)) as events:
@@ -70,7 +85,8 @@ class TrackedProvider:
             with self.store.connect() as db:
                 db.execute(
                     """UPDATE usage_events SET status=?,duration_ms=?,input_tokens=?,
-                    output_tokens=?,reasoning_tokens=?,total_tokens=?,error_code=? WHERE id=?""",
+                    output_tokens=?,reasoning_tokens=?,total_tokens=?,error_code=?,
+                    estimated_cost_usd=? WHERE id=?""",
                     (
                         status,
                         round((time.monotonic() - started) * 1000),
@@ -79,6 +95,7 @@ class TrackedProvider:
                         usage.reasoning_tokens if usage else None,
                         usage.total_tokens if usage else None,
                         error,
+                        estimate(usage, self.input_price, self.output_price),
                         event_id,
                     ),
                 )
@@ -182,6 +199,11 @@ def usage_rows(request, start, end, model_id):
         return [dict(r) for r in db.execute(query + " ORDER BY started_at DESC", params)]
 
 
+@router.get("/budgets")
+async def get_budgets(request: Request):
+    return current_budgets(request.app.state.connections)
+
+
 @router.get("/usage")
 async def get_usage(
     request: Request,
@@ -209,14 +231,22 @@ async def get_usage(
                 "reported_tokens": 0,
                 "unknown_usage": 0,
                 "duration_ms": 0,
+                "estimated_cost_usd": "0",
+                "unknown_cost_requests": 0,
             },
         )
+        group["estimated_cost_usd"] = str(
+            Decimal(group["estimated_cost_usd"]) + Decimal(row["estimated_cost_usd"] or "0")
+        )
+        group["unknown_cost_requests"] += row["estimated_cost_usd"] is None
         group["requests"] += 1
         group[row["status"]] += 1
         group["reported_tokens"] += row["total_tokens"] or 0
         group["unknown_usage"] += row["total_tokens"] is None
         group["duration_ms"] += row["duration_ms"] or 0
     return {
+        "estimated_cost_usd": str(total_cost(rows)),
+        "unknown_cost_requests": sum(r["estimated_cost_usd"] is None for r in rows),
         "requests": len(rows),
         "reported_tokens": sum(r["total_tokens"] or 0 for r in rows),
         "unknown_usage": sum(r["total_tokens"] is None for r in rows),
@@ -249,6 +279,9 @@ async def export_usage(
         "total_tokens",
         "duration_ms",
         "error_code",
+        "input_price_per_million",
+        "output_price_per_million",
+        "estimated_cost_usd",
     ]
     buffer = io.StringIO()
     writer = csv.writer(buffer)

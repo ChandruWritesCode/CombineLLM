@@ -1,5 +1,16 @@
 # Changelog
 
+## Phase 5 — manual budgets and cost estimates
+
+- Added optional user-entered USD input/output rates and per-request price snapshots.
+- Added workspace and per-model monthly UTC budgets with configurable warning thresholds.
+- Showed costs, unknown-cost counts and budget status in Usage, CSV and chat warnings.
+- Kept historical costs unchanged when prices change; schema 3 preserves old usage
+  as unknown-cost instead of inventing historical rates.
+- Budgets are advisory only; no requests are blocked and no models are switched.
+- Tested with simulated providers; these estimates are not verified provider bills.
+
+
 ## Phase 4 — model connections, settings and usage
 
 - Added multiple named model connections and explicit selection per chat.

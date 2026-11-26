@@ -23,7 +23,7 @@ class Store:
         with self.connect() as db:
             db.execute("PRAGMA journal_mode=WAL")
             version = db.execute("PRAGMA user_version").fetchone()[0]
-            if version > 2:
+            if version > 3:
                 raise RuntimeError("Database is newer than this application; do not downgrade.")
             if version == 0:
                 db.executescript("""
@@ -65,6 +65,15 @@ class Store:
                     CREATE INDEX usage_started ON usage_events(started_at);
                     UPDATE conversations SET model_id=NULL;
                     PRAGMA user_version=2;
+                    COMMIT;
+                """)
+            if version < 3:
+                db.executescript("""
+                    BEGIN IMMEDIATE;
+                    ALTER TABLE usage_events ADD COLUMN input_price_per_million TEXT;
+                    ALTER TABLE usage_events ADD COLUMN output_price_per_million TEXT;
+                    ALTER TABLE usage_events ADD COLUMN estimated_cost_usd TEXT;
+                    PRAGMA user_version=3;
                     COMMIT;
                 """)
             db.execute("UPDATE usage_events SET status='interrupted' WHERE status='running'")

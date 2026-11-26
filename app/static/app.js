@@ -29,6 +29,23 @@ async function api(path, options = {}) {
   }
   return response.status === 204 ? null : response.json();
 }
+let budgetRefresh = 0;
+async function refreshBudgets() {
+  const version = ++budgetRefresh;
+  try {
+    const data = await api("/budgets");
+    if (version !== budgetRefresh) return;
+    const selectedBudget = data.models.find(m => m.model_id === $("chat-model").value);
+    const warnings = [{name: "Workspace", ...data.workspace}, ...(selectedBudget ? [selectedBudget] : [])]
+      .filter(b => b.budget_usd !== null && (["warning", "exceeded"].includes(b.status) || b.unknown_cost_requests > 0));
+    $("budget-notice").textContent = warnings.map(b => `${b.name}: ${b.status === "below" ? "budget estimate incomplete" : "budget " + b.status}, $${b.estimated_cost_usd} estimated; ${b.unknown_cost_requests} unknown-cost requests.`).join(" ") + (warnings.length ? " Advisory only — requests remain enabled. See Usage." : "");
+    $("budget-notice").hidden = !warnings.length;
+  } catch {
+    if (version !== budgetRefresh) return;
+    $("budget-notice").textContent = "Budget information is unavailable. Requests remain enabled.";
+    $("budget-notice").hidden = false;
+  }
+}
 function controls() {
   providerReady = !!modelConnections.find(
     (m) => m.id === $("chat-model").value && m.enabled,
@@ -147,6 +164,7 @@ function attach(conversationId, messageId) {
     closeStream();
     activeMessage = null;
     controls();
+    refreshBudgets();
     listChats().catch((e) => notice(e.message));
   });
   source.addEventListener("removed", () => {
@@ -187,6 +205,7 @@ async function openChat(id) {
   $("messages").replaceChildren();
   $("welcome").hidden = !!chat.messages.length;
   chat.messages.forEach(drawMessage);
+  refreshBudgets();
   const running = chat.messages.find((m) => m.status === "streaming");
   if (running) attach(id, running.id);
   controls();
@@ -230,6 +249,7 @@ $("composer").onsubmit = async (event) => {
   } finally {
     sending = false;
     controls();
+    refreshBudgets();
     listChats().catch((e) => notice(e.message));
   }
 };
@@ -347,8 +367,10 @@ async function init() {
     notice(`Unable to load the workspace: ${e.message}`);
   }
   controls();
+  refreshBudgets();
 }
 $("chat-model").onchange = () => {
+  refreshBudgets();
   controls();
   notice(
     "The selected model will receive the completed conversation history on your next message.",

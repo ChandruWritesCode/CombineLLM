@@ -72,6 +72,13 @@
                 own.</small
               ></label
             >
+            <label>Monthly workspace budget (USD)
+              <input id="workspace-budget" type="number" min="0" max="1000000" step="0.00000001" placeholder="No budget" />
+            </label>
+            <label>Warn at percentage of budget
+              <input id="budget-warning" type="number" min="1" max="100" value="80" required />
+            </label>
+            <p class="full">Budgets are advisory monthly UTC targets. They do not block requests or guarantee a spending cap.</p>
             <div class="full">
               <button class="primary" type="submit">Save defaults</button>
             </div>
@@ -202,6 +209,16 @@
               placeholder="Leave blank to use the workspace default"
             ></textarea>
           </label>
+          <label>Input price (USD / million tokens)
+            <input id="input-price" type="number" min="0" max="1000000" step="0.00000001" placeholder="Unknown" />
+          </label>
+          <label>Output price (USD / million tokens)
+            <input id="output-price" type="number" min="0" max="1000000" step="0.00000001" placeholder="Unknown" />
+          </label>
+          <label>Monthly model budget (USD)
+            <input id="model-budget" type="number" min="0" max="1000000" step="0.00000001" placeholder="No budget" />
+          </label>
+          <p class="full">Enter your own prices. Blank means unknown; zero means a zero-price estimate. Prices apply only to future requests. Estimates exclude discounts, special cache rates and extra charges. Budgets only warn; they never stop spending.</p>
           <label class="check"
             ><input id="model-enabled" type="checkbox" checked />Enabled in
             chat</label

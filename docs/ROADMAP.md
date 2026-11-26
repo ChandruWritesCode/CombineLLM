@@ -13,7 +13,7 @@ Each phase should leave the application runnable.
 4. **Model connections and usage (implemented):** unlimited configured connections,
    manual chat selection, dedicated Settings and Usage pages, encrypted credentials,
    OpenRouter PKCE login and text adapters. Automatic routing is deliberately deferred.
-5. **Manual budgets and cost estimates (next; user-confirmed scope):** user-entered
+5. **Manual budgets and cost estimates (implemented; user-confirmed scope):** user-entered
    prices, estimated costs, explicit manual monthly budgets and usage warnings.
    Keep model selection manual; estimates are not provider bills or quota guarantees.
 6. **Routing and coordinated models (future):** ordered fallback, capability checks,
@@ -23,4 +23,4 @@ Each phase should leave the application runnable.
 The scope was revised at the user's request: settings and basic usage moved into
 Phase 4; automatic model management remains deferred. Website subscriptions do
 not automatically grant API access. See [Phase 4](PHASE_4.md), [the changelog](../CHANGELOG.md)
-and [Git workflow](CONTRIBUTING.md). Live cloud success remains unverified.
+[Phase 5](PHASE_5.md) and [Git workflow](CONTRIBUTING.md). Live cloud success remains unverified.

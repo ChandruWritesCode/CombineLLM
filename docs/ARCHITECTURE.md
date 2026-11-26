@@ -85,3 +85,12 @@ a tracker that records terminal outcome and reported usage for each attempt.
 Settings and usage use separate HTML pages with plain JavaScript. OpenRouter PKCE
 state is short-lived and process-local, bound to an HttpOnly browser cookie.
 See [Phase 4](PHASE_4.md) for capabilities, API routes and limitations.
+
+## Phase 5 additions
+
+Schema 3 adds two nullable price snapshots and a nullable estimated USD amount to
+each usage event. Connection/default JSON stores manual rates and budget targets.
+The tracker captures rates before streaming and calculates Decimal costs from final
+input/output counts. No retroactive repricing occurs. `app/costs.py` calculates
+current UTC-month advisory budgets including unknown-cost counts. No generation
+path blocks or routes requests based on budgets. See [Phase 5](PHASE_5.md).
