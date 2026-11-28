@@ -1,5 +1,11 @@
 # Changelog
 
+## Phase 16 — model capability hints
+
+- Added manually entered context limits and task-strength labels to model settings.
+- Displayed the hints on model cards and validated them in the API.
+- Kept unknown context limits explicit; these fields do not claim provider verification.
+
 ## Phase 15 — conversation portability
 
 - Added JSON and readable text exports for saved conversations.

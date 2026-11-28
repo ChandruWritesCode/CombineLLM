@@ -38,6 +38,12 @@ Each phase should leave the application runnable.
     monthly counts, transactional reservations and visible skipped attempts.
 15. **Conversation portability (implemented):** versioned JSON transcript export
     and import, readable text export, and explicit credential/usage boundaries.
+16. **Model capability hints (implemented):** manual context-size and task-strength
+    labels stored with each connection, with explicit unknown values.
+17. **Task-aware routing (planned):** apply those hints during one-call automatic
+    selection with a visible explanation and safeguards.
+18. **Collaboration clarity (planned):** show each coordinated step and its usage.
+19. **Release readiness (planned):** backup/restore guidance and local diagnostics.
 
 The scope was revised at the user's request: settings and basic usage moved into
 Phase 4; ordered fallback and coordination are opt-in. Website subscriptions do

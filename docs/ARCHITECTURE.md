@@ -165,3 +165,9 @@ one transaction. It keeps text, statuses, model labels and timestamps, while
 leaving model connection IDs, credentials, usage ledger rows and attempt groups
 behind. Readable text export uses the same validated snapshot. See
 [Phase 15](PHASE_15.md).
+
+## Phase 16 capability hints
+
+Connections may store a user-entered character limit and task-strength tags in
+their existing JSON configuration. No schema migration or provider discovery is
+involved. Blank context limits remain unknown. See [Phase 16](PHASE_16.md).

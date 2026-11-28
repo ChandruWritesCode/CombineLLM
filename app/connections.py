@@ -29,6 +29,10 @@ class Connection(BaseModel):
     usage_group: str = Field(default="", max_length=100)
     timeout_seconds: float = Field(default=60, ge=1, le=300)
     max_output_tokens: int = Field(default=2048, ge=1, le=8192)
+    context_limit_chars: int | None = Field(default=None, ge=1000, le=1000000)
+    task_tags: list[Literal["general", "code", "writing", "analysis"]] = Field(
+        default_factory=list, max_length=4
+    )
     temperature: float | None = Field(default=None, ge=0, le=2)
     system_prompt: str = Field(default="", max_length=10000)
     input_price_per_million: Money | None = None
@@ -46,6 +50,13 @@ class Connection(BaseModel):
             or any(ord(c) < 32 for c in value.get_secret_value())
         ):
             raise ValueError("Credential has invalid characters or length")
+        return value
+
+    @field_validator("task_tags")
+    @classmethod
+    def distinct_tags(cls, value):
+        if len(set(value)) != len(value):
+            raise ValueError("Task strengths must be distinct")
         return value
 
     @model_validator(mode="after")

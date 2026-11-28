@@ -1,7 +1,7 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 15 — conversation portability.**
+**Current release: Phase 16 — model capability hints.**
 
 Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
 Provider availability depends on the service and your account; backend health does
@@ -56,6 +56,9 @@ Export a saved conversation as JSON for reimport or as a readable text transcrip
 Use **Import conversation** in the sidebar to create a new chat from a JSON archive.
 Exports include conversation text, so keep downloaded files private. See
 [Phase 15](docs/PHASE_15.md).
+In Settings, add your own context-size and task-strength hints to each model. They
+are labels for future routing, not provider-verified capabilities. See
+[Phase 16](docs/PHASE_16.md).
 
 ### Import Gemini from the environment
 
@@ -165,6 +168,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Phase 13: automatic selection](docs/PHASE_13.md) — opt-in one-call choice and attribution.
 - [Phase 14: request ceilings](docs/PHASE_14.md) — local monthly call limits and accounting.
 - [Phase 15: conversation portability](docs/PHASE_15.md) — transcript export and import.
+- [Phase 16: model capability hints](docs/PHASE_16.md) — manual context and task labels.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.

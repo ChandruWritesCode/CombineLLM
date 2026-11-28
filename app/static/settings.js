@@ -38,6 +38,10 @@ function edit(model = null) {
   $("model-timeout").value = model?.timeout_seconds || 60;
   $("model-tokens").value =
     model?.max_output_tokens || preferences.max_output_tokens || 2048;
+  $("context-limit").value = model?.context_limit_chars ?? "";
+  document.querySelectorAll('input[name="task-tag"]').forEach((input) => {
+    input.checked = (model?.task_tags || []).includes(input.value);
+  });
   $("model-temperature").value = model?.temperature ?? "";
   if (model) $("model-token-parameter").value = model.token_parameter;
   $("input-price").value = model?.input_price_per_million ?? "";
@@ -87,6 +91,7 @@ async function load() {
         "small",
         `${model.enabled ? "Enabled" : "Disabled"} · ${model.has_key ? "Credential saved" : "No credential"} · ${model.timeout_seconds}s timeout`,
       ),
+      node("small", `${model.context_limit_chars ? `Context hint: ${model.context_limit_chars.toLocaleString()} characters` : "Context limit unknown"} · ${(model.task_tags || []).length ? `Tasks: ${model.task_tags.join(", ")}` : "No task labels"}`),
     );
     const actions = node("div", null, "model-actions");
     actions.append(actionButton("Edit", () => edit(model)));
@@ -199,6 +204,8 @@ $("model-form").onsubmit = async (event) => {
     enabled: $("model-enabled").checked,
     timeout_seconds: Number($("model-timeout").value),
     max_output_tokens: Number($("model-tokens").value),
+    context_limit_chars: $("context-limit").value ? Number($("context-limit").value) : null,
+    task_tags: [...document.querySelectorAll('input[name="task-tag"]:checked')].map(input => input.value),
     temperature:
       $("model-temperature").value === ""
         ? null
