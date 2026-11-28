@@ -49,6 +49,9 @@ Each phase should leave the application runnable.
 20. **Compact routing and profiles (implemented):** foldable chat controls,
     advisory provider quota signals, saved routing profiles with call and
     estimated-cost limits, and bounded one-model/review/split plans.
+21. **Formatted chat and mobile layout (implemented):** safe local Markdown
+    rendering, code-copy and source-view actions, a spacious message layout,
+    and a compact mobile chats menu.
 
 The scope was revised at the user's request: settings and basic usage moved into
 Phase 4; ordered fallback and coordination are opt-in. Website subscriptions do

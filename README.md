@@ -1,7 +1,7 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 20 — compact chat controls and routing profiles.**
+**Current release: Phase 21 — formatted chat and mobile layout.**
 
 Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
 Provider availability depends on the service and your account; backend health does
@@ -77,6 +77,12 @@ chat, select a profile, and inspect its read-only preview before sending.
 Optional limits check a price-based estimate before sending; actual provider
 charges can differ. Usage now shows sanitized quota signals from past provider
 responses, when supplied. See [Phase 20](docs/PHASE_20.md).
+Assistant answers now render Markdown headings, lists, tables, links, and code
+blocks. Code blocks have a Copy code button; each answer also offers Copy and
+View source. The conversation view uses a spacious assistant layout and a
+compact Chats & pages menu on narrow screens. The Markdown parser is bundled
+locally; raw HTML and remote images are not rendered. See
+[Phase 21](docs/PHASE_21.md).
 
 ### Import Gemini from the environment
 
@@ -191,6 +197,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Phase 18: collaboration clarity](docs/PHASE_18.md) — saved step results and usage.
 - [Phase 19: release readiness](docs/PHASE_19.md) — diagnostics and safe restore.
 - [Phase 20: compact routing and profiles](docs/PHASE_20.md) — foldable controls, quota signals, bounded plans.
+- [Phase 21: formatted chat](docs/PHASE_21.md) — Markdown, code actions, and mobile navigation.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.

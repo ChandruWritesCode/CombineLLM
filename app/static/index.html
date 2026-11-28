@@ -8,9 +8,12 @@
     <script src="/static/theme.js?v=11"></script>
     <link rel="stylesheet" href="/static/styles.css" />
     <link rel="stylesheet" href="/static/settings.css" />
-    <script defer src="/static/app.js?v=20"></script>
+    <script defer src="/static/vendor/markdown-it.umd.min.js?v=15.0.3"></script>
+    <script defer src="/static/markdown.js?v=21"></script>
+    <script defer src="/static/app.js?v=21"></script>
     <link rel="stylesheet" href="/static/refresh.css?v=20" />
     <link rel="stylesheet" href="/static/themes.css?v=12" />
+    <link rel="stylesheet" href="/static/chat.css?v=21" />
     <script defer src="/static/ui.js"></script>
   </head>
   <body>
@@ -20,6 +23,7 @@
       >
       <div class="workspace-label">PERSONAL WORKSPACE</div>
       <button id="new-chat" class="primary">＋ New conversation</button>
+      <button id="mobile-menu-toggle" class="quiet" type="button" aria-expanded="false">☰ Chats &amp; pages</button>
       <button id="import-chat" class="quiet" type="button">Import conversation</button>
       <input id="import-file" type="file" accept="application/json,.json" hidden />
       <div class="section-label">
@@ -45,11 +49,14 @@
           <h1 id="chat-title">A little space to think.</h1>
         </div>
         <div class="header-actions">
-          <a id="export-json" class="quiet" href="#" hidden>Export JSON</a>
-          <a id="export-text" class="quiet" href="#" hidden>Export text</a>
-          <button id="rename" class="quiet" disabled>Rename</button
-          ><button id="delete" class="quiet danger" disabled>Delete</button
-          ><a href="/docs" target="_blank" rel="noopener">API docs</a>
+          <button id="chat-actions-toggle" class="quiet" type="button" aria-expanded="false" aria-label="Conversation actions">⋯</button>
+          <div id="chat-action-items">
+            <a id="export-json" class="quiet" href="#" hidden>Export JSON</a>
+            <a id="export-text" class="quiet" href="#" hidden>Export text</a>
+            <button id="rename" class="quiet" disabled>Rename</button>
+            <button id="delete" class="quiet danger" disabled>Delete</button>
+            <a href="/docs" target="_blank" rel="noopener">API docs</a>
+          </div>
         </div>
       </header>
       <details id="routing-panel" class="routing-panel">
@@ -120,6 +127,7 @@
         </div>
         <div id="messages"></div>
       </section>
+      <button id="jump-latest" class="quiet" type="button" hidden>↓ Latest message</button>
       <div class="composer-area">
         <form id="composer">
           <label class="sr-only" for="prompt">Your message</label

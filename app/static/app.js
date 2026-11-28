@@ -10,6 +10,12 @@ let modelConnections = [],
   workspacePreferences = {};
 let autoReady = false, autoSuggestionName = "", autoSuggestionId = "";
 let profileReady = false, profilePreviewVersion = 0;
+const rawMessageIds = new Set();
+function updateJumpButton() {
+  const thread = $("thread");
+  const distance = thread.scrollHeight - thread.scrollTop - thread.clientHeight;
+  $("jump-latest").hidden = !$("messages").children.length || distance < 250;
+}
 async function refreshProfilePreview() {
   const version = ++profilePreviewVersion;
   const name = $("routing-profile").value;
@@ -215,9 +221,14 @@ function drawMessage(message) {
     $("messages").append(article);
   }
   article.className = `message ${message.role}`;
+  article.dataset.status = message.status;
   article.replaceChildren();
   const head = document.createElement("div");
   head.className = "message-head";
+  const avatar = document.createElement("span");
+  avatar.className = "message-avatar";
+  avatar.setAttribute("aria-hidden", "true");
+  avatar.textContent = message.role === "user" ? "Y" : "✦";
   const name = document.createElement("span");
   name.textContent = message.role === "user" ? "You" : "CombineLLM";
   const meta = document.createElement("span");
@@ -225,22 +236,41 @@ function drawMessage(message) {
     message.role === "assistant"
       ? `${message.provider || "Model"} / ${message.model || "Unknown"} · ${message.coordination_stage && message.status === "streaming" ? message.coordination_stage : message.status}${message.coordination_mode ? " · " + (message.coordination_mode === "review" ? "draft + review" : "split + synthesize") : ""}`
       : "";
-  head.append(name, meta);
+  head.append(avatar, name, meta);
   const content = document.createElement("div");
   content.className = "message-content";
-  content.textContent =
-    message.content ||
+  const source = message.content ||
     (message.status === "streaming" ? (message.coordination_stage || "Thinking…") : "No answer was generated.");
+  if (message.role === "assistant" && message.content && renderMarkdown && !rawMessageIds.has(message.id)) {
+    content.classList.add("rendered-markdown");
+    content.innerHTML = renderMarkdown(message.content);
+  } else {
+    content.textContent = source;
+  }
   article.append(head, content);
   if (message.role === "assistant" && message.content && message.status !== "streaming") {
+    const actions = document.createElement("div");
+    actions.className = "message-actions";
     const copy = document.createElement("button");
     copy.className = "quiet copy-response";
-    copy.textContent = "Copy response";
+    copy.type = "button";
+    copy.textContent = "Copy";
     copy.onclick = async () => {
       try { await navigator.clipboard.writeText(message.content); copy.textContent = "Copied!"; }
       catch { notice("Clipboard access is unavailable. Select the response text to copy it."); }
     };
-    article.append(copy);
+    const raw = document.createElement("button");
+    raw.className = "quiet raw-toggle";
+    raw.type = "button";
+    raw.textContent = rawMessageIds.has(message.id) ? "Rendered view" : "View source";
+    raw.setAttribute("aria-pressed", String(rawMessageIds.has(message.id)));
+    raw.onclick = () => {
+      if (rawMessageIds.has(message.id)) rawMessageIds.delete(message.id);
+      else rawMessageIds.add(message.id);
+      drawMessage(message);
+    };
+    actions.append(copy, raw);
+    article.append(actions);
   }
   if (message.role === "assistant" && message.selection_mode === "automatic") {
     const selection = document.createElement("div");
@@ -330,7 +360,7 @@ function drawMessage(message) {
   }
   if (message.role === "user") {
     const reuse = document.createElement("button");
-    reuse.className = "quiet";
+    reuse.className = "quiet reuse-prompt";
     reuse.textContent = "Reuse prompt";
     reuse.onclick = () => {
       $("prompt").value = message.content;
@@ -338,7 +368,21 @@ function drawMessage(message) {
     };
     article.append(reuse);
   }
+  updateJumpButton();
 }
+$("messages").addEventListener("click", async (event) => {
+  const button = event.target.closest(".copy-code");
+  if (!button) return;
+  const content = button.closest(".code-block")?.querySelector("code")?.textContent;
+  if (content == null) return;
+  try { await navigator.clipboard.writeText(content); button.textContent = "Copied!"; }
+  catch { notice("Clipboard access is unavailable. Select the code to copy it."); }
+});
+$("thread").addEventListener("scroll", updateJumpButton, { passive: true });
+$("jump-latest").onclick = () => {
+  $("thread").scrollTo({ top: $("thread").scrollHeight, behavior: "smooth" });
+  $("jump-latest").hidden = true;
+};
 function attach(conversationId, messageId) {
   closeStream();
   activeMessage = messageId;
@@ -393,6 +437,9 @@ async function openChat(id) {
     $("collaborator-model").value = "";
   }
   selected = id;
+  document.body.classList.remove("mobile-menu-open");
+  $("mobile-menu-toggle").setAttribute("aria-expanded", "false");
+  $("mobile-menu-toggle").textContent = "☰ Chats & pages";
   activeMessage = null;
   localStorage.setItem("combinellm-selected", id);
   $("chat-title").textContent = chat.title;
@@ -416,6 +463,7 @@ async function openChat(id) {
   controls();
   await listChats();
   $("thread").scrollTop = $("thread").scrollHeight;
+  updateJumpButton();
 }
 $("new-chat").onclick = async () => {
   try {
@@ -429,6 +477,15 @@ $("new-chat").onclick = async () => {
   } catch (e) {
     notice(e.message);
   }
+};
+$("mobile-menu-toggle").onclick = () => {
+  const open = document.body.classList.toggle("mobile-menu-open");
+  $("mobile-menu-toggle").setAttribute("aria-expanded", String(open));
+  $("mobile-menu-toggle").textContent = open ? "✕ Close menu" : "☰ Chats & pages";
+};
+$("chat-actions-toggle").onclick = () => {
+  const open = $("chat-action-items").classList.toggle("open");
+  $("chat-actions-toggle").setAttribute("aria-expanded", String(open));
 };
 $("import-chat").onclick = () => $("import-file").click();
 $("import-file").onchange = async () => {
@@ -548,6 +605,7 @@ $("action-form").onsubmit = async (event) => {
       activeMessage = null;
       localStorage.removeItem("combinellm-selected");
       $("messages").replaceChildren();
+      updateJumpButton();
       $("welcome").hidden = false;
       $("chat-title").textContent = "A little space to think.";
       controls();

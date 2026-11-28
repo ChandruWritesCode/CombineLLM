@@ -1,5 +1,16 @@
 # Changelog
 
+## Phase 21 — formatted chat and mobile layout
+
+- Rendered assistant Markdown with headings, lists, tables, quotes, links, and
+  copyable code blocks using a locally bundled parser.
+- Kept raw HTML inactive, blocked script links, and displayed image alt text
+  without fetching remote images.
+- Refreshed chat with right-aligned user bubbles, an open assistant reading
+  surface, a compact composer, and a mobile Chats & pages menu.
+- Added per-answer source view and Copy actions plus a jump-to-latest control.
+- Moved conversation actions into a compact menu on narrow screens.
+
 ## Phase 20 — compact routing and profiles
 
 - Folded chat model and routing controls into a compact section that remembers
