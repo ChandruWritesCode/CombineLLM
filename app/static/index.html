@@ -7,8 +7,8 @@
     <title>CombineLLM · Your workspace</title>
     <link rel="stylesheet" href="/static/styles.css" />
     <link rel="stylesheet" href="/static/settings.css" />
-    <script defer src="/static/app.js"></script>
-    <link rel="stylesheet" href="/static/refresh.css" />
+    <script defer src="/static/app.js?v=10"></script>
+    <link rel="stylesheet" href="/static/refresh.css?v=10" />
     <script defer src="/static/ui.js"></script>
   </head>
   <body>
@@ -56,6 +56,17 @@
         <label><input id="use-fallback" type="checkbox" /> Enable configured fallback for this chat session</label>
         <label><input id="local-only" type="checkbox" /> Local endpoints only for this session</label>
         <small id="fallback-description">Manual selection only. Configure an optional fallback order in Settings.</small>
+      </div>
+      <div class="coordination-control">
+        <label for="coordination-mode">How to answer</label>
+        <select id="coordination-mode">
+          <option value="">One model</option>
+          <option value="review">Draft, review, revise · 3 calls</option>
+          <option value="split">Split and synthesize · 4 calls</option>
+        </select>
+        <label for="collaborator-model" id="collaborator-label" hidden>Collaborator model</label>
+        <select id="collaborator-model" hidden></select>
+        <small id="coordination-description">Choose a second model to review a draft or work on a subtask. Each step uses provider quota and appears in Usage.</small>
       </div>
       <div id="notice" role="status" hidden></div>
       <div id="budget-notice" role="status" hidden></div>

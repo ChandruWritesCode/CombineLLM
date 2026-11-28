@@ -109,3 +109,14 @@ retains the primary model. See [Phase 6](PHASE_6.md) for exact transition rules.
 Schema 5 persists shared cooldowns and links saved answers to attempt groups.
 See [Phase 7](PHASE_7.md) for configuration, endpoint restrictions and limits.
 Groq live generation was reported working by the user before this phase.
+
+## Phase 10 coordination
+
+`app/coordination.py` composes tracked providers for saved conversations. The
+selected model owns drafting/planning and the final answer; a distinct selected
+collaborator reviews or works on one subtask. All steps share an attempt group and
+are recorded in `usage_events` with distinct sources. Only final-answer text is
+saved as assistant content; the user sees the current stage while generation runs.
+Schema 6 stores the chosen mode, current stage and a 1–5 user rating on messages.
+The existing cancellation and restart recovery paths apply to the whole workflow.
+See [Phase 10](PHASE_10.md) for bounds and failure behavior.

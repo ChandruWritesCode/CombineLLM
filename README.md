@@ -1,7 +1,7 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 9 — refreshed interface and usability.**
+**Current release: Phase 10 — coordinated model workflows.**
 
 Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
 Provider availability depends on the service and your account; backend health does
@@ -35,6 +35,10 @@ and token statistics, estimated costs and monthly budget warnings. Enter your ow
 prices and budgets in Settings. Budgets are advisory: requests remain enabled.
 Manual selection remains the default. Configure an optional fallback order in
 Settings, then explicitly enable it in chat. See [Phase 6](docs/PHASE_6.md).
+For coordinated answers, choose **Draft, review, revise** or **Split and synthesize**
+in chat, then choose a different collaborator model. The selected model writes the
+final answer. See [Phase 10](docs/PHASE_10.md) for the number of calls, limits and
+privacy behavior.
 
 ### Import Gemini from the environment
 
@@ -69,14 +73,15 @@ Use `--build` as well after changing source or dependencies. See
 - Keep prompts and partial answers when a provider fails.
 - Reuse a prompt and send it again explicitly; no automatic retries.
 - View model attribution, completion status, and reported token totals.
+- Review each coordinated step's usage and estimated cost; rate completed answers.
 - Preserve chats across Docker container rebuilds using a named SQLite volume.
 
 Failed, cancelled, and interrupted turns remain visible but are excluded from
 future model context. Successful turns are sent as history on subsequent messages.
 Cloud prompts leave your machine; select a local endpoint for local inference.
-OpenRouter login is supported; other connections use API keys. Paid-use caps,
-multi-user support and intelligent coordination are not included. Ordered fallback
-is available only when explicitly enabled; budgets remain advisory.
+OpenRouter login is supported; other connections use API keys. Paid-use caps and
+multi-user support are not included. Ordered fallback and coordination are separate
+opt-in modes; budgets remain advisory.
 
 ## Develop without Docker
 
@@ -137,6 +142,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Phase 7: routing controls](docs/PHASE_7.md) — shared cooldowns, local-only policy and attempt history.
 - [Phase 8: guided setup](docs/PHASE_8.md) — free offers, trials, official links and setup walkthroughs.
 - [Phase 9: interface refresh](docs/PHASE_9.md) — colors, responsive layout and accessibility.
+- [Phase 10: coordinated models](docs/PHASE_10.md) — review, subtask synthesis, ratings and costs.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.
@@ -155,6 +161,7 @@ app/connections.py      Model registry and encrypted credentials
 app/model_api.py        Settings and application usage ledger
 app/costs.py            Decimal cost estimates and advisory budgets
 app/routing.py          Bounded opt-in ordered fallback
+app/coordination.py     Bounded draft/review and split/synthesis workflows
 app/oauth.py            OpenRouter PKCE account connection
 app/providers/          Gemini, Anthropic and compatible text adapters
 app/static/             HTML, CSS, and JavaScript frontend

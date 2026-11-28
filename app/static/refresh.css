@@ -27,6 +27,10 @@ header h1 { font-size:clamp(1.2rem,2.5vw,1.9rem); }
 .provider-bar { background:#19172d; border-color:#37304e; gap:12px; flex-wrap:wrap; }
 .badge { color:#94f5df; background:#173d3d; border:1px solid #377672; border-radius:999px; }
 .fallback-control { background:#17162a; border-bottom:1px solid #343047; line-height:1.5; }
+.coordination-control { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:11px 24px; background:#19172e; border-bottom:1px solid #343047; }
+.coordination-control label { color:#e6dcf8; font-size:.85rem; }
+.coordination-control select { max-width:100%; background:#141427; color:#f5f0ff; border:1px solid #6e5b83; border-radius:10px; padding:9px 11px; }
+.coordination-control small { flex-basis:100%; color:#c4b8d6; line-height:1.45; }
 .fallback-control label { display:flex; align-items:center; gap:8px; min-height:28px; }
 input[type="checkbox"] { accent-color:#bba0ff; width:18px!important; height:18px; flex-shrink:0; }
 #welcome { padding-top:clamp(20px,5vh,65px); }
@@ -45,6 +49,9 @@ input[type="checkbox"] { accent-color:#bba0ff; width:18px!important; height:18px
 .message details { margin-top:14px; padding:12px; border-radius:10px; background:#11122266; color:#c6bfd8; font-size:.85rem; }
 .message summary { cursor:pointer; color:#bba7ff; }
 .message .copy-response { margin-top:12px; color:#9ff5e4; }
+.answer-rating { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:12px; color:#cfc4e2; font-size:.82rem; }
+.answer-rating button { min-width:30px; padding:5px 8px; border:1px solid #685779; background:#211e35; color:#e8dcfa; }
+.answer-rating button[aria-pressed="true"] { background:#644785; border-color:#c6a7f5; color:#fff; }
 #composer { background:#23203a; border:1px solid #776192; border-radius:20px; box-shadow:0 0 0 4px #ad91ff0a,0 12px 35px #0003; }
 #composer:focus-within { border-color:#c3a6ff; box-shadow:0 0 0 3px #b394ff25; }
 #prompt { color:#f6f1ff; }
@@ -88,6 +95,7 @@ dialog li { margin-bottom:10px; color:#c8bddb; line-height:1.6; }
  .chat-links a,.page-nav a { padding:9px 10px; font-size:.82rem; }
  .management .sidebar { position:static; }.management header { position:static; }
  header { padding:18px 16px; }.fallback-control { padding:10px 16px; font-size:.8rem; }
+ .coordination-control { padding:12px 16px; }.coordination-control select { width:100%; }
  .panel { border-radius:16px; }.stats-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
  .model-actions button { min-height:40px; }.dialog-actions { flex-wrap:wrap; }
  #welcome h2 { font-size:2.2rem; }.provider-bar { padding:12px 16px; }

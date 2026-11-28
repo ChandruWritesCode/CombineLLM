@@ -10,7 +10,9 @@ async function refresh() {
   for (const id of ["start", "end"])
     if ($(id).value) params.set(id, $(id).value);
   if ($("filter-model").value) params.set("model_id", $("filter-model").value);
-  const [data, budgets] = await Promise.all([api(`/usage?${params}`), api("/budgets")]);
+  const [data, budgets, quality] = await Promise.all([
+    api(`/usage?${params}`), api("/budgets"), api("/quality"),
+  ]);
   if (version !== refreshVersion) return;
   $("export").href = `/api/v1/usage/export?${params}`;
   $("summary").replaceChildren();
@@ -37,6 +39,14 @@ async function refresh() {
     const text = `${budget.name} · ${budgets.month_utc}: $${formatCost(budget.estimated_cost_usd)} estimated / ${budget.budget_usd === null ? "no budget set" : "$" + budget.budget_usd + " target"} · ${budget.status.replace("_", " ")} · ${budget.unknown_cost_requests} unknown-cost requests`;
     $("budgets").append(node("p", text));
   }
+  $("quality").replaceChildren();
+  for (const group of quality.groups) {
+    const card = node("div", null, "stat");
+    const label = {single: "One model", review: "Draft + review", split: "Split + synthesize"}[group.mode] || group.mode;
+    card.append(node("span", label), node("strong", `${Number(group.average_rating).toFixed(1)} / 5`), node("small", `${group.rated} rated answer(s)`));
+    $("quality").append(card);
+  }
+  if (!quality.groups.length) $("quality").append(node("p", "Rate a completed answer in chat to see it here."));
   $("models-body").replaceChildren();
   $("empty").hidden = !!data.models.length;
   for (const model of data.models) {

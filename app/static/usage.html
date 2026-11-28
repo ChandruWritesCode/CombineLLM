@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="/static/styles.css" />
     <link rel="stylesheet" href="/static/settings.css" />
     <script defer src="/static/common.js"></script>
-    <script defer src="/static/usage.js"></script>
-    <link rel="stylesheet" href="/static/refresh.css" />
+    <script defer src="/static/usage.js?v=10"></script>
+    <link rel="stylesheet" href="/static/refresh.css?v=10" />
     <script defer src="/static/ui.js"></script>
   </head>
   <body class="management">
@@ -59,6 +59,7 @@
           <div id="budgets"></div>
         </section>
         <section class="panel"><h2>Shared usage groups</h2><p>All-time totals, independent of filters. Groups share cooldowns, not guaranteed remaining quotas.</p><div id="usage-groups"></div></section>
+        <section class="panel"><h2>Answer quality ratings</h2><p>All-time ratings you gave completed answers, grouped by workflow. Averages are subjective and are not model benchmarks.</p><div id="quality" class="stats-grid"></div></section>
         <div id="summary" class="stats-grid"></div>
         <section class="panel">
           <h2>By model</h2>

@@ -35,8 +35,11 @@ async function refreshBudgets() {
   try {
     const data = await api("/budgets");
     if (version !== budgetRefresh) return;
-    const selectedBudget = data.models.find(m => m.model_id === $("chat-model").value);
-    const warnings = [{name: "Workspace", ...data.workspace}, ...(selectedBudget ? [selectedBudget] : [])]
+    const budgetModels = [$("chat-model").value];
+    if ($("coordination-mode").value && $("collaborator-model").value)
+      budgetModels.push($("collaborator-model").value);
+    const selectedBudgets = data.models.filter(m => budgetModels.includes(m.model_id));
+    const warnings = [{name: "Workspace", ...data.workspace}, ...selectedBudgets]
       .filter(b => b.budget_usd !== null && (["warning", "exceeded"].includes(b.status) || b.unknown_cost_requests > 0));
     $("budget-notice").textContent = warnings.map(b => `${b.name}: ${b.status === "below" ? "budget estimate incomplete" : "budget " + b.status}, $${b.estimated_cost_usd} estimated; ${b.unknown_cost_requests} unknown-cost requests.`).join(" ") + (warnings.length ? " Advisory only — requests remain enabled. See Usage." : "");
     $("budget-notice").hidden = !warnings.length;
@@ -52,13 +55,26 @@ function controls() {
   );
   $("chat-model").disabled = sending || !!activeMessage;
   $("local-only").disabled = sending || !!activeMessage;
+  const coordinating = !!$("coordination-mode").value;
+  $("coordination-mode").disabled = sending || !!activeMessage || modelConnections.filter(m => m.enabled).length < 2;
+  $("collaborator-label").hidden = !coordinating;
+  $("collaborator-model").hidden = !coordinating;
+  $("collaborator-model").disabled = sending || !!activeMessage || !coordinating;
+  const collaboratorReady = !coordinating || modelConnections.some(
+    m => m.id === $("collaborator-model").value && m.enabled && m.id !== $("chat-model").value,
+  );
   const fallbackIds = workspacePreferences.fallback_model_ids || [];
-  $("use-fallback").disabled = sending || !!activeMessage || !fallbackIds.length;
-  $("provider-state").textContent = $("use-fallback").checked ? "Ordered fallback enabled" : "Manual selection";
+  $("use-fallback").disabled = sending || !!activeMessage || !fallbackIds.length || coordinating;
+  $("provider-state").textContent = coordinating
+    ? ($("coordination-mode").value === "review" ? "Draft + review" : "Split + synthesize")
+    : $("use-fallback").checked ? "Ordered fallback enabled" : "Manual selection";
   $("fallback-description").textContent = fallbackIds.length
     ? `After the selected model: ${fallbackIds.map(id => modelConnections.find(m => m.id === id)?.name || "Unavailable model").join(" → ")}. Enabling this can send history to each provider and use credits. No fallback after partial text.`
     : "Manual selection only. Configure an optional fallback order in Settings.";
-  $("send").disabled = sending || !!activeMessage || !providerReady;
+  $("coordination-description").textContent = coordinating
+    ? "The selected model writes the final answer. Both models receive conversation context; each step uses quota and is recorded in Usage. No automatic retry."
+    : "Choose a second model to review a draft or work on a subtask. Each step uses provider quota and appears in Usage.";
+  $("send").disabled = sending || !!activeMessage || !providerReady || !collaboratorReady;
   $("stop").hidden = !activeMessage;
   $("rename").disabled = !selected || sending;
   $("delete").disabled = !selected || sending;
@@ -111,14 +127,14 @@ function drawMessage(message) {
   const meta = document.createElement("span");
   meta.textContent =
     message.role === "assistant"
-      ? `${message.provider || "Model"} / ${message.model || "Unknown"} · ${message.status}`
+      ? `${message.provider || "Model"} / ${message.model || "Unknown"} · ${message.coordination_stage && message.status === "streaming" ? message.coordination_stage : message.status}${message.coordination_mode ? " · " + (message.coordination_mode === "review" ? "draft + review" : "split + synthesize") : ""}`
       : "";
   head.append(name, meta);
   const content = document.createElement("div");
   content.className = "message-content";
   content.textContent =
     message.content ||
-    (message.status === "streaming" ? "Thinking…" : "No answer was generated.");
+    (message.status === "streaming" ? (message.coordination_stage || "Thinking…") : "No answer was generated.");
   article.append(head, content);
   if (message.role === "assistant" && message.content && message.status !== "streaming") {
     const copy = document.createElement("button");
@@ -137,10 +153,43 @@ function drawMessage(message) {
     attempts.append(summary);
     for (const attempt of message.attempts) {
       const line = document.createElement("p");
-      line.textContent = `${attempt.attempt_number}. ${attempt.label} (${attempt.model}): ${attempt.status}${attempt.error_code ? " — " + attempt.error_code.replaceAll("_", " ") : ""}`;
+      const stage = attempt.source?.startsWith("coordination_")
+        ? attempt.source.replace("coordination_", "").replaceAll("_", " ") + " · " : "";
+      line.textContent = `${attempt.attempt_number}. ${stage}${attempt.label} (${attempt.model}): ${attempt.status}${attempt.error_code ? " — " + attempt.error_code.replaceAll("_", " ") : ""}`;
       attempts.append(line);
     }
+    const knownCosts = message.attempts.filter(a => a.estimated_cost_usd !== null);
+    const unknownCosts = message.attempts.length - knownCosts.length;
+    const cost = knownCosts.reduce((sum, a) => sum + Number(a.estimated_cost_usd), 0);
+    const total = document.createElement("p");
+    total.textContent = `Estimated cost: $${cost.toFixed(6)}${unknownCosts ? ` · ${unknownCosts} step(s) with unknown cost` : ""}. Rate this answer to track quality.`;
+    attempts.append(total);
     article.append(attempts);
+  }
+  if (message.role === "assistant" && message.status === "complete") {
+    const rating = document.createElement("div");
+    rating.className = "answer-rating";
+    const label = document.createElement("span");
+    label.textContent = "Answer quality: ";
+    rating.append(label);
+    for (let score = 1; score <= 5; score++) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "quiet";
+      button.textContent = String(score);
+      button.setAttribute("aria-label", `Rate answer ${score} out of 5`);
+      button.setAttribute("aria-pressed", String(message.rating === score));
+      button.onclick = async () => {
+        try {
+          const updated = await api(`/conversations/${message.conversation_id}/messages/${message.id}/rating`, {
+            method: "PUT", body: JSON.stringify({ rating: score }),
+          });
+          drawMessage(updated);
+        } catch (e) { notice(e.message); }
+      };
+      rating.append(button);
+    }
+    article.append(rating);
   }
   if (message.error) {
     const error = document.createElement("div");
@@ -216,7 +265,11 @@ async function openChat(id) {
   const chat = await api(`/conversations/${id}`);
   if (version !== viewVersion) return;
   closeStream();
-  if (selected !== id) $("use-fallback").checked = false;
+  if (selected !== id) {
+    $("use-fallback").checked = false;
+    $("coordination-mode").value = "";
+    $("collaborator-model").value = "";
+  }
   selected = id;
   activeMessage = null;
   localStorage.setItem("combinellm-selected", id);
@@ -270,7 +323,8 @@ $("composer").onsubmit = async (event) => {
     const id = selected;
     await api(`/conversations/${id}/messages`, {
       method: "POST",
-      body: JSON.stringify({ content, model_id: $("chat-model").value, fallback: $("use-fallback").checked, local_only: $("local-only").checked }),
+      body: JSON.stringify({ content, model_id: $("chat-model").value, fallback: $("use-fallback").checked, local_only: $("local-only").checked,
+        coordination: $("coordination-mode").value ? {mode: $("coordination-mode").value, collaborator_model_id: $("collaborator-model").value} : null }),
     });
     $("prompt").value = "";
     await openChat(id);
@@ -381,6 +435,9 @@ async function init() {
       $("chat-model").append(
         new Option(`${model.name} · ${model.model}`, model.id),
       );
+    $("collaborator-model").replaceChildren(new Option("Choose a collaborator", ""));
+    for (const model of modelConnections.filter(m => m.enabled))
+      $("collaborator-model").append(new Option(`${model.name} · ${model.model}`, model.id));
     $("chat-model").value = workspacePreferences.default_model_id || "";
     if (!modelConnections.some((m) => m.enabled))
       notice("Add an enabled model in Settings to start chatting.");
@@ -400,6 +457,11 @@ async function init() {
   refreshBudgets();
 }
 $("use-fallback").onchange = controls;
+$("coordination-mode").onchange = () => {
+  if ($("coordination-mode").value) $("use-fallback").checked = false;
+  controls(); refreshBudgets();
+};
+$("collaborator-model").onchange = () => { controls(); refreshBudgets(); };
 $("chat-model").onchange = () => {
   refreshBudgets();
   controls();

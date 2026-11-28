@@ -1,5 +1,12 @@
 # Changelog
 
+## Phase 10 — coordinated model workflows
+
+- Added opt-in draft/review/revision and two-subtask synthesis in saved chat.
+- Recorded each step in the existing usage ledger, with per-answer cost estimates.
+- Added progress stages, answer ratings with a Usage summary, bounded calls, and cancellation handling.
+- Kept manual model selection and ordered fallback as separate options.
+
 ## Phase 9 — interface and usability refresh
 
 - Added a vibrant violet, aqua, and coral palette across chat and management pages.

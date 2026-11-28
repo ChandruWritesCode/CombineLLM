@@ -23,7 +23,7 @@ class Store:
         with self.connect() as db:
             db.execute("PRAGMA journal_mode=WAL")
             version = db.execute("PRAGMA user_version").fetchone()[0]
-            if version > 5:
+            if version > 6:
                 raise RuntimeError("Database is newer than this application; do not downgrade.")
             if version == 0:
                 db.executescript("""
@@ -91,6 +91,15 @@ class Store:
                     ALTER TABLE usage_events ADD COLUMN usage_group TEXT;
                     ALTER TABLE messages ADD COLUMN attempt_group_id TEXT;
                     PRAGMA user_version=5;
+                    COMMIT;
+                """)
+            if version < 6:
+                db.executescript("""
+                    BEGIN IMMEDIATE;
+                    ALTER TABLE messages ADD COLUMN coordination_mode TEXT;
+                    ALTER TABLE messages ADD COLUMN coordination_stage TEXT;
+                    ALTER TABLE messages ADD COLUMN rating INTEGER;
+                    PRAGMA user_version=6;
                     COMMIT;
                 """)
             db.execute("UPDATE usage_events SET status='interrupted' WHERE status='running'")
@@ -224,6 +233,11 @@ class Store:
                 )
             model_id = getattr(provider, "model_id", None)
             db.execute("UPDATE messages SET model_id=? WHERE id=?", (model_id, answer_id))
+            if getattr(provider, "coordination_mode", None):
+                db.execute(
+                    "UPDATE messages SET coordination_mode=?,attempt_group_id=? WHERE id=?",
+                    (provider.coordination_mode, provider.attempt_group_id, answer_id),
+                )
             if model_id:
                 db.execute(
                     "UPDATE conversations SET model_id=? WHERE id=?", (model_id, conversation_id)
@@ -245,7 +259,8 @@ class Store:
             [
                 dict(r)
                 for r in db.execute(
-                    "SELECT label,model,status,error_code,attempt_number FROM usage_events "
+                    "SELECT label,model,source,status,error_code,attempt_number,"
+                    "estimated_cost_usd,total_tokens FROM usage_events "
                     "WHERE attempt_group_id=? ORDER BY attempt_number",
                     (group,),
                 )
@@ -281,6 +296,24 @@ class Store:
                     message_id,
                 ),
             )
+
+    def save_stage(self, message_id, stage):
+        with self.connect() as db:
+            db.execute(
+                "UPDATE messages SET coordination_stage=? WHERE id=? AND status='streaming'",
+                (stage, message_id),
+            )
+
+    def rate_answer(self, conversation_id, message_id, rating):
+        with self.connect() as db:
+            cursor = db.execute(
+                "UPDATE messages SET rating=? WHERE conversation_id=? AND id=? "
+                "AND role='assistant' AND status='complete'",
+                (rating, conversation_id, message_id),
+            )
+            if not cursor.rowcount:
+                raise HTTPException(422, "Only completed assistant answers can be rated")
+        return self.message(conversation_id, message_id)
 
     def message(self, conversation_id, message_id):
         with self.connect() as db:

@@ -224,6 +224,19 @@ async def get_budgets(request: Request):
     return current_budgets(request.app.state.connections)
 
 
+@router.get("/quality")
+async def get_quality(request: Request):
+    """Local, subjective answer ratings grouped by answer workflow."""
+    with request.app.state.store.connect() as db:
+        rows = db.execute(
+            "SELECT COALESCE(coordination_mode,'single') AS mode, COUNT(*) AS rated, "
+            "AVG(rating) AS average_rating FROM messages "
+            "WHERE role='assistant' AND status='complete' AND rating IS NOT NULL "
+            "GROUP BY COALESCE(coordination_mode,'single') ORDER BY mode"
+        ).fetchall()
+    return {"groups": [dict(row) for row in rows], "scope": "User ratings of saved answers."}
+
+
 @router.get("/usage")
 async def get_usage(
     request: Request,

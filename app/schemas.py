@@ -40,6 +40,12 @@ class ChatRequest(BaseModel):
         return self
 
 
+class Coordination(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    mode: Literal["review", "split"]
+    collaborator_model_id: str = Field(min_length=1)
+
+
 class Usage(BaseModel):
     input_tokens: int | None = None
     output_tokens: int | None = None

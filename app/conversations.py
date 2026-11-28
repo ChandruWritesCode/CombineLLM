@@ -9,7 +9,9 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from app.chat import get_provider, sse
+from app.coordination import build_coordinated_provider
 from app.providers.base import ChatProvider, ProviderError
+from app.schemas import Coordination
 from app.storage import Store
 
 router = APIRouter(prefix="/api/v1/conversations", tags=["conversations"])
@@ -35,6 +37,12 @@ class Turn(BaseModel):
     model_id: str | None = None
     fallback: bool = False
     local_only: bool = False
+    coordination: Coordination | None = None
+
+
+class Rating(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    rating: int | None = Field(ge=1, le=5)
 
 
 class Generations:
@@ -53,7 +61,9 @@ class Generations:
             async with aclosing(provider.stream(request)) as events:
                 async for event in events:
                     self.store.attribute_answer(message_id, provider)
-                    if event.kind == "delta":
+                    if event.kind == "stage":
+                        self.store.save_stage(message_id, event.text)
+                    elif event.kind == "delta":
                         content += event.text
                         self.store.save_answer(message_id, content, "streaming")
                     else:
@@ -143,6 +153,12 @@ async def send(
     db: Store = Depends(store),
     provider: ChatProvider = Depends(get_provider),
 ):
+    if body.coordination:
+        if body.fallback:
+            raise HTTPException(422, "Choose either coordination or ordered fallback.")
+        provider = build_coordinated_provider(
+            request.app, provider, body.coordination, body.local_only
+        )
     try:
         message_id, chat_request = db.begin(
             conversation_id,
@@ -156,6 +172,14 @@ async def send(
         ) from exc
     request.app.state.generations.start(message_id, chat_request, provider)
     return {"message_id": message_id, "conversation_id": conversation_id}
+
+
+@router.put("/{conversation_id}/messages/{message_id}/rating")
+async def rate_answer(
+    conversation_id: str, message_id: str, body: Rating, db: Store = Depends(store)
+):
+    db.message(conversation_id, message_id)
+    return db.rate_answer(conversation_id, message_id, body.rating)
 
 
 @router.post("/{conversation_id}/messages/{message_id}/cancel")
