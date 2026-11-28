@@ -46,8 +46,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     application = FastAPI(
         title=settings.app_name,
-        version="0.10.0",
-        description="Self-hosted LLM backend. Phase 10: coordinated model workflows.",
+        version="0.11.0",
+        description="Self-hosted LLM backend. Phase 11: appearance themes.",
         lifespan=lifespan,
     )
     application.state.settings = settings

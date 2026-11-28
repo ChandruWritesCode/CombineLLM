@@ -1,7 +1,7 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 10 — coordinated model workflows.**
+**Current release: Phase 11 — appearance themes.**
 
 Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
 Provider availability depends on the service and your account; backend health does
@@ -39,6 +39,8 @@ For coordinated answers, choose **Draft, review, revise** or **Split and synthes
 in chat, then choose a different collaborator model. The selected model writes the
 final answer. See [Phase 10](docs/PHASE_10.md) for the number of calls, limits and
 privacy behavior.
+Choose a color theme in **Settings → Appearance**. The preference applies across
+pages in the same browser. See [Phase 11](docs/PHASE_11.md).
 
 ### Import Gemini from the environment
 
@@ -143,6 +145,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Phase 8: guided setup](docs/PHASE_8.md) — free offers, trials, official links and setup walkthroughs.
 - [Phase 9: interface refresh](docs/PHASE_9.md) — colors, responsive layout and accessibility.
 - [Phase 10: coordinated models](docs/PHASE_10.md) — review, subtask synthesis, ratings and costs.
+- [Phase 11: appearance themes](docs/PHASE_11.md) — color presets and system preference.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.

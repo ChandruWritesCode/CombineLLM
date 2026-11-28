@@ -120,3 +120,11 @@ saved as assistant content; the user sees the current stage while generation run
 Schema 6 stores the chosen mode, current stage and a 1–5 user rating on messages.
 The existing cancellation and restart recovery paths apply to the whole workflow.
 See [Phase 10](PHASE_10.md) for bounds and failure behavior.
+
+## Phase 11 appearance
+
+`theme.js` reads a browser-local theme choice before CSS loads. `themes.css` applies
+palette overrides across the existing pages. The System option follows the device
+light/dark preference and reacts to changes. Themes make no backend request and
+do not change model settings, stored chats, or the SQLite schema. See
+[Phase 11](PHASE_11.md).

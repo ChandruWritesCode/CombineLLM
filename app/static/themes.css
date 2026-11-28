@@ -1,0 +1,141 @@
+:root[data-theme="ocean"] {
+  --theme-bg: #071b27; --theme-side: #0c2934; --theme-surface: #10303b;
+  --theme-raised: #153a46; --theme-field: #0a2330; --theme-text: #efffff;
+  --theme-muted: #b2d2d9; --theme-border: #426776; --theme-accent: #74e8dc;
+  --theme-accent-text: #082831; --theme-link: #95f1e1; --theme-soft: #215060;
+}
+:root[data-theme="ember"] {
+  --theme-bg: #21141b; --theme-side: #2b1b27; --theme-surface: #32212d;
+  --theme-raised: #432b37; --theme-field: #21151f; --theme-text: #fff5ef;
+  --theme-muted: #e0c0c0; --theme-border: #805560; --theme-accent: #ffb484;
+  --theme-accent-text: #351d1a; --theme-link: #ffd0a9; --theme-soft: #603743;
+}
+:root[data-theme="daylight"] {
+  color-scheme: light;
+  --theme-bg: #f6f5ff; --theme-side: #eae6fa; --theme-surface: #ffffff;
+  --theme-raised: #f1edfa; --theme-field: #ffffff; --theme-text: #201a37;
+  --theme-muted: #564d70; --theme-border: #bbb1d2; --theme-accent: #5b3aa5;
+  --theme-accent-text: #ffffff; --theme-link: #3d2a83; --theme-soft: #ded4f2;
+}
+:root[data-theme="ocean"], :root[data-theme="ember"], :root[data-theme="daylight"] {
+  --muted: var(--theme-muted); --border: var(--theme-border); --mint: var(--theme-accent);
+  background: var(--theme-bg); color: var(--theme-text);
+}
+:root[data-theme="ocean"] body, :root[data-theme="ember"] body,
+:root[data-theme="daylight"] body { background: var(--theme-bg); color: var(--theme-text); }
+:root[data-theme="ocean"] .sidebar, :root[data-theme="ember"] .sidebar,
+:root[data-theme="daylight"] .sidebar { background: var(--theme-side); border-color: var(--theme-border); }
+:root[data-theme="ocean"] header, :root[data-theme="ember"] header,
+:root[data-theme="daylight"] header,
+:root[data-theme="ocean"] .management header, :root[data-theme="ember"] .management header,
+:root[data-theme="daylight"] .management header { background: var(--theme-bg); border-color: var(--theme-border); }
+:root[data-theme="ocean"] .provider-bar, :root[data-theme="ember"] .provider-bar,
+:root[data-theme="daylight"] .provider-bar,
+:root[data-theme="ocean"] .fallback-control, :root[data-theme="ember"] .fallback-control,
+:root[data-theme="daylight"] .fallback-control,
+:root[data-theme="ocean"] .coordination-control, :root[data-theme="ember"] .coordination-control,
+:root[data-theme="daylight"] .coordination-control { background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text); }
+:root[data-theme="ocean"] .panel, :root[data-theme="ember"] .panel,
+:root[data-theme="daylight"] .panel, :root[data-theme="ocean"] .message,
+:root[data-theme="ember"] .message, :root[data-theme="daylight"] .message,
+:root[data-theme="ocean"] #composer, :root[data-theme="ember"] #composer,
+:root[data-theme="daylight"] #composer { background: var(--theme-surface); border-color: var(--theme-border); color: var(--theme-text); }
+:root[data-theme="ocean"] .model-card, :root[data-theme="ember"] .model-card,
+:root[data-theme="daylight"] .model-card, :root[data-theme="ocean"] .stat,
+:root[data-theme="ember"] .stat, :root[data-theme="daylight"] .stat,
+:root[data-theme="ocean"] .stat:nth-child(n), :root[data-theme="ember"] .stat:nth-child(n),
+:root[data-theme="daylight"] .stat:nth-child(n),
+:root[data-theme="ocean"] .message.user, :root[data-theme="ember"] .message.user,
+:root[data-theme="daylight"] .message.user { background: var(--theme-raised); border-color: var(--theme-border); color: var(--theme-text); }
+:root[data-theme="ocean"] .primary, :root[data-theme="ember"] .primary,
+:root[data-theme="daylight"] .primary, :root[data-theme="ocean"] #send,
+:root[data-theme="ember"] #send, :root[data-theme="daylight"] #send,
+:root[data-theme="ocean"] .primary:hover, :root[data-theme="ember"] .primary:hover,
+:root[data-theme="daylight"] .primary:hover,
+:root[data-theme="ocean"] #send:hover, :root[data-theme="ember"] #send:hover,
+:root[data-theme="daylight"] #send:hover { background: var(--theme-accent); color: var(--theme-accent-text); border-color: var(--theme-accent); }
+:root[data-theme="ocean"] .mark, :root[data-theme="ember"] .mark,
+:root[data-theme="daylight"] .mark { background: var(--theme-accent); color: var(--theme-accent-text); }
+:root[data-theme="ocean"] .quiet, :root[data-theme="ember"] .quiet,
+:root[data-theme="daylight"] .quiet,
+:root[data-theme="ocean"] button:not(.primary):not(#send),
+:root[data-theme="ember"] button:not(.primary):not(#send),
+:root[data-theme="daylight"] button:not(.primary):not(#send) { color: var(--theme-text); border-color: var(--theme-border); }
+:root[data-theme="ocean"] .quiet:hover, :root[data-theme="ember"] .quiet:hover,
+:root[data-theme="daylight"] .quiet:hover,
+:root[data-theme="ocean"] .chat-links a:hover, :root[data-theme="ember"] .chat-links a:hover,
+:root[data-theme="daylight"] .chat-links a:hover,
+:root[data-theme="ocean"] .page-nav a:hover, :root[data-theme="ember"] .page-nav a:hover,
+:root[data-theme="daylight"] .page-nav a:hover { background: var(--theme-soft); color: var(--theme-text); }
+:root[data-theme="ocean"] .page-nav a.active, :root[data-theme="ember"] .page-nav a.active,
+:root[data-theme="daylight"] .page-nav a.active,
+:root[data-theme="ocean"] #conversations button.active,
+:root[data-theme="ember"] #conversations button.active,
+:root[data-theme="daylight"] #conversations button.active { background: var(--theme-soft); color: var(--theme-text); box-shadow: inset 3px 0 var(--theme-accent); }
+:root[data-theme="ocean"] .form-grid input, :root[data-theme="ember"] .form-grid input,
+:root[data-theme="daylight"] .form-grid input,
+:root[data-theme="ocean"] .form-grid select, :root[data-theme="ember"] .form-grid select,
+:root[data-theme="daylight"] .form-grid select,
+:root[data-theme="ocean"] .form-grid textarea, :root[data-theme="ember"] .form-grid textarea,
+:root[data-theme="daylight"] .form-grid textarea,
+:root[data-theme="ocean"] .filters input, :root[data-theme="ember"] .filters input,
+:root[data-theme="daylight"] .filters input,
+:root[data-theme="ocean"] .filters select, :root[data-theme="ember"] .filters select,
+:root[data-theme="daylight"] .filters select,
+:root[data-theme="ocean"] .model-select, :root[data-theme="ember"] .model-select,
+:root[data-theme="daylight"] .model-select,
+:root[data-theme="ocean"] .coordination-control select,
+:root[data-theme="ember"] .coordination-control select,
+:root[data-theme="daylight"] .coordination-control select,
+:root[data-theme="ocean"] #search, :root[data-theme="ember"] #search,
+:root[data-theme="daylight"] #search { background: var(--theme-field); color: var(--theme-text); border-color: var(--theme-border); }
+:root[data-theme="ocean"] dialog, :root[data-theme="ember"] dialog,
+:root[data-theme="daylight"] dialog { background: var(--theme-surface); color: var(--theme-text); border-color: var(--theme-border); }
+:root[data-theme="ocean"] th, :root[data-theme="ember"] th,
+:root[data-theme="daylight"] th { background: var(--theme-raised); color: var(--theme-text); }
+:root[data-theme="ocean"] td, :root[data-theme="ember"] td,
+:root[data-theme="daylight"] td { color: var(--theme-text); }
+:root[data-theme="ocean"] .panel a:not(.primary), :root[data-theme="ember"] .panel a:not(.primary),
+:root[data-theme="daylight"] .panel a:not(.primary) { color: var(--theme-link); }
+:root[data-theme="daylight"] h1, :root[data-theme="daylight"] h2,
+:root[data-theme="daylight"] h3, :root[data-theme="daylight"] .brand,
+:root[data-theme="daylight"] .stat strong,
+:root[data-theme="daylight"] .message-head { color: var(--theme-text); }
+:root[data-theme="daylight"] .page-nav a, :root[data-theme="daylight"] .chat-links a,
+:root[data-theme="daylight"] .sidebar-footer,
+:root[data-theme="daylight"] #conversations button,
+:root[data-theme="daylight"] .workspace-label,
+:root[data-theme="daylight"] .eyebrow,
+:root[data-theme="daylight"] .stat span,
+:root[data-theme="daylight"] .stat small,
+:root[data-theme="daylight"] dialog li,
+:root[data-theme="daylight"] .message-head span:last-child,
+:root[data-theme="daylight"] .message-meta,
+:root[data-theme="daylight"] .coordination-control label,
+:root[data-theme="daylight"] .coordination-control small,
+:root[data-theme="daylight"] .form-grid label,
+:root[data-theme="daylight"] .filters label { color: var(--theme-muted); }
+:root[data-theme="daylight"] textarea::placeholder,
+:root[data-theme="daylight"] input::placeholder { color: #6b607e; }
+:root[data-theme="daylight"] #prompt { color: var(--theme-text); }
+:root[data-theme="daylight"] .suggestions button { background: var(--theme-raised); border-color: var(--theme-border); color: var(--theme-text); }
+:root[data-theme="daylight"] .suggestions button:hover { background: var(--theme-soft); }
+:root[data-theme="daylight"] .message summary,
+:root[data-theme="daylight"] .message .copy-response { color: var(--theme-link); }
+:root[data-theme="daylight"] #welcome h2 { background: none; color: var(--theme-accent); }
+:root[data-theme="daylight"] .composer-area { background: linear-gradient(transparent,var(--theme-bg) 25%); }
+:root[data-theme="daylight"] #notice:not([hidden]) { background: #e2f5ee; color: #174d43; }
+:root[data-theme="daylight"] #budget-notice { background: #fff4df; color: #5a3c13; }
+:root[data-theme="daylight"] .message details { background: #f4f0fa; color: var(--theme-text); }
+:root[data-theme="daylight"] .answer-rating button { background: var(--theme-raised); color: var(--theme-text); }
+:root[data-theme="daylight"] .answer-rating button[aria-pressed="true"] { background: var(--theme-accent); color: #fff; }
+:root[data-theme="daylight"] :focus-visible { outline-color: #335f99!important; }
+
+.theme-options { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:18px 0 8px; }
+.theme-option { display:flex; flex-direction:column; gap:10px; padding:15px; border:2px solid var(--border); border-radius:14px; cursor:pointer; }
+.theme-option:has(input:checked) { border-color:var(--mint); box-shadow:0 0 0 2px #8f73bb44; }
+.theme-option input { accent-color:var(--mint); }
+.theme-option strong { font-size:.95rem; }
+.theme-option small { color:var(--muted); line-height:1.4; }
+.theme-swatches { display:flex; gap:5px; }
+.theme-swatches i { width:22px; height:22px; border-radius:6px; border:1px solid #7777; }

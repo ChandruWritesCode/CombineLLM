@@ -28,6 +28,10 @@ Each phase should leave the application runnable.
    layouts, accessible navigation, reduced-motion support and copy actions.
 10. **Coordinated models (implemented):** opt-in draft/review/revision and two-subtask
     synthesis, per-step usage and cost estimates, and saved answer ratings.
+11. **Appearance themes (implemented):** five browser-side choices including the
+    original vibrant palette, a light palette, and a system-following option.
+12. **Usage-aware recommendations (planned):** explain model availability and
+    estimated cost before a request; never claim provider quota without evidence.
 
 The scope was revised at the user's request: settings and basic usage moved into
 Phase 4; ordered fallback and coordination are opt-in. Website subscriptions do

@@ -4,11 +4,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Settings · CombineLLM</title>
+    <script src="/static/theme.js?v=11"></script>
     <link rel="stylesheet" href="/static/styles.css" />
     <link rel="stylesheet" href="/static/settings.css" />
     <script defer src="/static/common.js"></script>
     <script defer src="/static/settings.js"></script>
     <link rel="stylesheet" href="/static/refresh.css?v=10" />
+    <link rel="stylesheet" href="/static/themes.css?v=11" />
     <script defer src="/static/ui.js"></script>
   </head>
   <body class="management">
@@ -34,6 +36,17 @@
       </header>
       <div id="notice" role="status" hidden></div>
       <div class="management-content">
+        <section class="panel" aria-labelledby="theme-title">
+          <h2 id="theme-title">Appearance</h2>
+          <p>Pick a look for this browser. Your choice applies to every CombineLLM page immediately.</p>
+          <div class="theme-options" role="radiogroup" aria-label="Color theme">
+            <label class="theme-option"><span><input type="radio" name="theme-choice" value="violet" /> <strong>Violet</strong></span><span class="theme-swatches"><i style="background:#101024"></i><i style="background:#a994ff"></i><i style="background:#70ead5"></i></span><small>Vibrant original</small></label>
+            <label class="theme-option"><span><input type="radio" name="theme-choice" value="ocean" /> <strong>Ocean</strong></span><span class="theme-swatches"><i style="background:#071b27"></i><i style="background:#74e8dc"></i><i style="background:#153a46"></i></span><small>Cool and calm</small></label>
+            <label class="theme-option"><span><input type="radio" name="theme-choice" value="ember" /> <strong>Ember</strong></span><span class="theme-swatches"><i style="background:#21141b"></i><i style="background:#ffb484"></i><i style="background:#603743"></i></span><small>Warm dark tones</small></label>
+            <label class="theme-option"><span><input type="radio" name="theme-choice" value="daylight" /> <strong>Daylight</strong></span><span class="theme-swatches"><i style="background:#f6f5ff"></i><i style="background:#5b3aa5"></i><i style="background:#ffffff"></i></span><small>Bright and clear</small></label>
+            <label class="theme-option"><span><input type="radio" name="theme-choice" value="system" /> <strong>System</strong></span><span class="theme-swatches"><i style="background:#101024"></i><i style="background:#f6f5ff"></i><i style="background:#5b3aa5"></i></span><small>Follows device setting</small></label>
+          </div>
+        </section>
         <section class="panel">
           <div class="panel-title">
             <div>

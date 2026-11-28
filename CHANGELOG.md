@@ -1,5 +1,11 @@
 # Changelog
 
+## Phase 11 — appearance themes
+
+- Added Violet, Ocean, Ember, Daylight, and System theme choices in Settings.
+- Saved the choice in this browser and applied it across all four pages before styles load.
+- Kept the original vibrant theme as the default, with readable light and dark palettes.
+
 ## Phase 10 — coordinated model workflows
 
 - Added opt-in draft/review/revision and two-subtask synthesis in saved chat.
