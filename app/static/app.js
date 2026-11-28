@@ -8,6 +8,7 @@ let selected = null,
 let viewVersion = 0;
 let modelConnections = [],
   workspacePreferences = {};
+let autoReady = false, autoSuggestionName = "", autoSuggestionId = "";
 
 function notice(text = "") {
   $("notice").textContent = text;
@@ -35,7 +36,7 @@ async function refreshBudgets() {
   try {
     const data = await api("/budgets");
     if (version !== budgetRefresh) return;
-    const budgetModels = [$("chat-model").value];
+    const budgetModels = [$("auto-select").checked ? autoSuggestionId : $("chat-model").value];
     if ($("coordination-mode").value && $("collaborator-model").value)
       budgetModels.push($("collaborator-model").value);
     const selectedBudgets = data.models.filter(m => budgetModels.includes(m.model_id));
@@ -54,6 +55,11 @@ async function loadRecommendations() {
   const version = ++recommendationRefresh;
   const data = await api(`/recommendations?local_only=${$("local-only").checked}`);
   if (version !== recommendationRefresh) return;
+  autoReady = !!data.suggested_model_id;
+  autoSuggestionId = data.suggested_model_id || "";
+  autoSuggestionName = data.models.find(m => m.model_id === data.suggested_model_id)?.name || "";
+  controls();
+  refreshBudgets();
   $("recommendations").replaceChildren();
   if (!data.models.length) {
     const empty = document.createElement("p");
@@ -88,13 +94,19 @@ async function loadRecommendations() {
   }
 }
 function controls() {
-  providerReady = !!modelConnections.find(
+  const automatic = $("auto-select").checked;
+  providerReady = automatic ? autoReady : !!modelConnections.find(
     (m) => m.id === $("chat-model").value && m.enabled,
   );
-  $("chat-model").disabled = sending || !!activeMessage;
+  $("chat-model").disabled = sending || !!activeMessage || automatic;
+  $("auto-select").disabled = sending || !!activeMessage;
+  $("auto-description").textContent = automatic
+    ? autoReady ? `Current suggestion: ${autoSuggestionName}. The app checks again when you send and makes one provider request.`
+      : "No eligible model is available. Check model settings, cooldowns, or local-only mode."
+    : "Uses local comparison at send time, then makes one provider request. You can review the current suggestion below.";
   $("local-only").disabled = sending || !!activeMessage;
   const coordinating = !!$("coordination-mode").value;
-  $("coordination-mode").disabled = sending || !!activeMessage || modelConnections.filter(m => m.enabled).length < 2;
+  $("coordination-mode").disabled = sending || !!activeMessage || automatic || modelConnections.filter(m => m.enabled).length < 2;
   $("collaborator-label").hidden = !coordinating;
   $("collaborator-model").hidden = !coordinating;
   $("collaborator-model").disabled = sending || !!activeMessage || !coordinating;
@@ -102,8 +114,8 @@ function controls() {
     m => m.id === $("collaborator-model").value && m.enabled && m.id !== $("chat-model").value,
   );
   const fallbackIds = workspacePreferences.fallback_model_ids || [];
-  $("use-fallback").disabled = sending || !!activeMessage || !fallbackIds.length || coordinating;
-  $("provider-state").textContent = coordinating
+  $("use-fallback").disabled = sending || !!activeMessage || !fallbackIds.length || coordinating || automatic;
+  $("provider-state").textContent = automatic ? "Automatic choice for one message" : coordinating
     ? ($("coordination-mode").value === "review" ? "Draft + review" : "Split + synthesize")
     : $("use-fallback").checked ? "Ordered fallback enabled" : "Manual selection";
   $("fallback-description").textContent = fallbackIds.length
@@ -186,6 +198,12 @@ function drawMessage(message) {
       catch { notice("Clipboard access is unavailable. Select the response text to copy it."); }
     };
     article.append(copy);
+  }
+  if (message.role === "assistant" && message.selection_mode === "automatic") {
+    const selection = document.createElement("div");
+    selection.className = "message-meta";
+    selection.textContent = `Auto-selected: ${message.model || "model"}. ${message.selection_reason || ""}`;
+    article.append(selection);
   }
   if (message.attempts?.length) {
     const attempts = document.createElement("details");
@@ -309,6 +327,7 @@ async function openChat(id) {
   closeStream();
   if (selected !== id) {
     $("use-fallback").checked = false;
+    $("auto-select").checked = false;
     $("coordination-mode").value = "";
     $("collaborator-model").value = "";
   }
@@ -365,9 +384,11 @@ $("composer").onsubmit = async (event) => {
     const id = selected;
     await api(`/conversations/${id}/messages`, {
       method: "POST",
-      body: JSON.stringify({ content, model_id: $("chat-model").value, fallback: $("use-fallback").checked, local_only: $("local-only").checked,
+      body: JSON.stringify({ content, model_id: $("auto-select").checked ? null : $("chat-model").value,
+        auto_select: $("auto-select").checked, fallback: $("use-fallback").checked, local_only: $("local-only").checked,
         coordination: $("coordination-mode").value ? {mode: $("coordination-mode").value, collaborator_model_id: $("collaborator-model").value} : null }),
     });
+    $("auto-select").checked = false;
     $("prompt").value = "";
     await openChat(id);
   } catch (e) {
@@ -499,13 +520,25 @@ async function init() {
   refreshBudgets();
 }
 $("use-fallback").onchange = controls;
+$("auto-select").onchange = () => {
+  if ($("auto-select").checked) {
+    $("use-fallback").checked = false;
+    $("coordination-mode").value = "";
+    autoReady = false;
+    autoSuggestionId = "";
+    loadRecommendations().catch((e) => notice(e.message));
+  }
+  controls();
+};
 $("model-guide").ontoggle = () => {
   if ($("model-guide").open) loadRecommendations().catch((e) => notice(e.message));
 };
 $("refresh-recommendations").onclick = () => loadRecommendations().catch((e) => notice(e.message));
 $("local-only").onchange = () => {
+  if ($("auto-select").checked) { autoReady = false; autoSuggestionId = ""; }
   controls();
-  if ($("model-guide").open) loadRecommendations().catch((e) => notice(e.message));
+  if ($("model-guide").open || $("auto-select").checked)
+    loadRecommendations().catch((e) => notice(e.message));
 };
 $("coordination-mode").onchange = () => {
   if ($("coordination-mode").value) $("use-fallback").checked = false;

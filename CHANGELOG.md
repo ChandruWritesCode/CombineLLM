@@ -1,5 +1,12 @@
 # Changelog
 
+## Phase 13 — guarded automatic selection
+
+- Added an opt-in one-message automatic model choice in saved chat.
+- Rechecked the Phase 12 ranking at send time and recorded the chosen model and reason.
+- Rejected conflicting fallback/coordination choices and unavailable candidates before sending.
+- Made exactly one provider request per automatic turn; no automatic retries or hidden fallback.
+
 ## Phase 12 — usage-aware model suggestions
 
 - Added a read-only Compare my models panel in chat with an explicit Choose action.

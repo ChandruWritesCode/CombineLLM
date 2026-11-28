@@ -136,3 +136,12 @@ and cooldowns. The endpoint performs no provider calls and stores no new data.
 Chat shows the explanation in a collapsible panel and changes the selected model
 only after the user clicks Choose. See [Phase 12](PHASE_12.md) for ranking rules and
 limits.
+
+## Phase 13 automatic selection
+
+The saved-chat provider dependency uses the Phase 12 comparison to choose one
+eligible model when `auto_select` is explicitly true. It resolves immediately
+before the turn is saved and sends through the normal tracked provider path. There
+is no fallback or coordination in that request. Schema 7 stores selection mode and
+a short explanation on the answer. The usage ledger records the single actual
+provider attempt. See [Phase 13](PHASE_13.md).

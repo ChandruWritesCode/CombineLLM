@@ -23,7 +23,7 @@ class Store:
         with self.connect() as db:
             db.execute("PRAGMA journal_mode=WAL")
             version = db.execute("PRAGMA user_version").fetchone()[0]
-            if version > 6:
+            if version > 7:
                 raise RuntimeError("Database is newer than this application; do not downgrade.")
             if version == 0:
                 db.executescript("""
@@ -100,6 +100,14 @@ class Store:
                     ALTER TABLE messages ADD COLUMN coordination_stage TEXT;
                     ALTER TABLE messages ADD COLUMN rating INTEGER;
                     PRAGMA user_version=6;
+                    COMMIT;
+                """)
+            if version < 7:
+                db.executescript("""
+                    BEGIN IMMEDIATE;
+                    ALTER TABLE messages ADD COLUMN selection_mode TEXT;
+                    ALTER TABLE messages ADD COLUMN selection_reason TEXT;
+                    PRAGMA user_version=7;
                     COMMIT;
                 """)
             db.execute("UPDATE usage_events SET status='interrupted' WHERE status='running'")
@@ -238,6 +246,14 @@ class Store:
                     "UPDATE messages SET coordination_mode=?,attempt_group_id=? WHERE id=?",
                     (provider.coordination_mode, provider.attempt_group_id, answer_id),
                 )
+            db.execute(
+                "UPDATE messages SET selection_mode=?,selection_reason=? WHERE id=?",
+                (
+                    getattr(provider, "selection_mode", "manual"),
+                    getattr(provider, "selection_reason", None),
+                    answer_id,
+                ),
+            )
             if model_id:
                 db.execute(
                     "UPDATE conversations SET model_id=? WHERE id=?", (model_id, conversation_id)

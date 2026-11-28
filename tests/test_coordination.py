@@ -252,8 +252,10 @@ def test_schema_six_preserves_existing_messages(tmp_path):
         db.execute("ALTER TABLE messages DROP COLUMN coordination_mode")
         db.execute("ALTER TABLE messages DROP COLUMN coordination_stage")
         db.execute("ALTER TABLE messages DROP COLUMN rating")
+        db.execute("ALTER TABLE messages DROP COLUMN selection_mode")
+        db.execute("ALTER TABLE messages DROP COLUMN selection_reason")
         db.execute("PRAGMA user_version=5")
     restored = Store(path)
     with restored.connect() as db:
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 6
+        assert db.execute("PRAGMA user_version").fetchone()[0] == 7
     assert restored.get(cid)["title"] == "Existing"

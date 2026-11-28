@@ -32,9 +32,8 @@ def _price(config):
     return (Decimal(str(input_rate)) + Decimal(str(output_rate))) / Decimal(1000)
 
 
-@router.get("/recommendations")
-async def recommendations(request: Request, local_only: bool = False):
-    registry = request.app.state.connections
+def compare_models(app, local_only=False):
+    registry = app.state.connections
     budgets = current_budgets(registry)
     budget_by_id = {item["model_id"]: item for item in budgets["models"]}
     items = []
@@ -106,3 +105,8 @@ async def recommendations(request: Request, local_only: bool = False):
             "live availability, or answer quality. Selection remains manual."
         ),
     }
+
+
+@router.get("/recommendations")
+async def recommendations(request: Request, local_only: bool = False):
+    return compare_models(request.app, local_only)

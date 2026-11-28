@@ -221,7 +221,13 @@ def test_v3_migration_preserves_legacy_usage(tmp_path):
         db.execute("ALTER TABLE usage_events DROP COLUMN attempt_number")
         db.execute("DROP TABLE cooldowns")
         db.execute("ALTER TABLE messages DROP COLUMN attempt_group_id")
-        for column in ["coordination_mode", "coordination_stage", "rating"]:
+        for column in [
+            "coordination_mode",
+            "coordination_stage",
+            "rating",
+            "selection_mode",
+            "selection_reason",
+        ]:
             db.execute(f"ALTER TABLE messages DROP COLUMN {column}")
         db.execute("ALTER TABLE usage_events DROP COLUMN usage_group")
         db.execute("PRAGMA user_version=3")
@@ -230,4 +236,4 @@ def test_v3_migration_preserves_legacy_usage(tmp_path):
         row = db.execute("SELECT * FROM usage_events").fetchone()
         assert row["estimated_cost_usd"] == "0.1"
         assert row["attempt_group_id"] is None
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 6
+        assert db.execute("PRAGMA user_version").fetchone()[0] == 7

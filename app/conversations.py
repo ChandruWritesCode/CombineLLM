@@ -38,6 +38,7 @@ class Turn(BaseModel):
     fallback: bool = False
     local_only: bool = False
     coordination: Coordination | None = None
+    auto_select: bool = False
 
 
 class Rating(BaseModel):
@@ -153,6 +154,11 @@ async def send(
     db: Store = Depends(store),
     provider: ChatProvider = Depends(get_provider),
 ):
+    if body.auto_select and (body.fallback or body.coordination or body.model_id):
+        raise HTTPException(
+            422,
+            "Automatic selection cannot combine with a model choice, fallback, or coordination.",
+        )
     if body.coordination:
         if body.fallback:
             raise HTTPException(422, "Choose either coordination or ordered fallback.")

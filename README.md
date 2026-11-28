@@ -1,7 +1,7 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 12 — usage-aware model suggestions.**
+**Current release: Phase 13 — guarded automatic model selection.**
 
 Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
 Provider availability depends on the service and your account; backend health does
@@ -45,6 +45,10 @@ Open **Compare my models** in chat to inspect a read-only suggestion based on
 configured prices, recent local request outcomes, advisory budgets, and cooldowns.
 Click **Choose** to use one; no prompt is sent until you submit it. See
 [Phase 12](docs/PHASE_12.md).
+For one saved-chat message, enable **Choose a model automatically for my next
+message**. The app checks the ranking when you send and makes one provider request.
+It records the selected model on the answer and turns the option off after that
+message. See [Phase 13](docs/PHASE_13.md).
 
 ### Import Gemini from the environment
 
@@ -151,6 +155,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Phase 10: coordinated models](docs/PHASE_10.md) — review, subtask synthesis, ratings and costs.
 - [Phase 11: appearance themes](docs/PHASE_11.md) — color presets and system preference.
 - [Phase 12: model suggestions](docs/PHASE_12.md) — explainable, read-only comparison.
+- [Phase 13: automatic selection](docs/PHASE_13.md) — opt-in one-call choice and attribution.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.

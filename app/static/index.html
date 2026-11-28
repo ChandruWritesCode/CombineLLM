@@ -8,8 +8,8 @@
     <script src="/static/theme.js?v=11"></script>
     <link rel="stylesheet" href="/static/styles.css" />
     <link rel="stylesheet" href="/static/settings.css" />
-    <script defer src="/static/app.js?v=12"></script>
-    <link rel="stylesheet" href="/static/refresh.css?v=12" />
+    <script defer src="/static/app.js?v=13"></script>
+    <link rel="stylesheet" href="/static/refresh.css?v=13" />
     <link rel="stylesheet" href="/static/themes.css?v=12" />
     <script defer src="/static/ui.js"></script>
   </head>
@@ -55,6 +55,8 @@
         ><span id="provider-state" class="badge">Manual selection</span>
       </div>
       <div class="fallback-control">
+        <label><input id="auto-select" type="checkbox" /> Choose a model automatically for my next message</label>
+        <small id="auto-description">Uses local comparison at send time, then makes one provider request. You can review the current suggestion below.</small>
         <label><input id="use-fallback" type="checkbox" /> Enable configured fallback for this chat session</label>
         <label><input id="local-only" type="checkbox" /> Local endpoints only for this session</label>
         <small id="fallback-description">Manual selection only. Configure an optional fallback order in Settings.</small>

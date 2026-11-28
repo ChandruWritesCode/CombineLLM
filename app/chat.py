@@ -1,10 +1,11 @@
 import json
 from contextlib import aclosing
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
 from app.providers.base import ChatProvider, ProviderError
+from app.recommendations import compare_models
 from app.routing import select_provider
 from app.schemas import ChatRequest, ChatResponse, ProviderStatus, Usage
 
@@ -17,15 +18,31 @@ async def get_provider(request: Request) -> ChatProvider:
     conversation_id = request.path_params.get("conversation_id")
     if not model_id and conversation_id:
         model_id = request.app.state.store.get(conversation_id).get("model_id")
-    return select_provider(
+    auto_selected = bool(
+        conversation_id and isinstance(body, dict) and body.get("auto_select") is True
+    )
+    if auto_selected:
+        comparison = compare_models(request.app, local_only=body.get("local_only") is True)
+        model_id = comparison["suggested_model_id"]
+        if not model_id:
+            raise HTTPException(422, "No eligible model is available for automatic selection.")
+    provider = select_provider(
         request.app,
         model_id,
         "saved_chat" if conversation_id else "stateless_chat",
         fallback=isinstance(body, dict)
         and body.get("fallback") is True
-        and not body.get("coordination"),
+        and not body.get("coordination")
+        and not auto_selected,
         local_only=isinstance(body, dict) and body.get("local_only") is True,
     )
+    if auto_selected:
+        provider.selection_mode = "automatic"
+        provider.selection_reason = (
+            "Chosen from local prices, recent outcomes, budgets and cooldowns. "
+            "Provider quota and live availability were not checked."
+        )
+    return provider
 
 
 @router.get("/providers", response_model=list[ProviderStatus])
