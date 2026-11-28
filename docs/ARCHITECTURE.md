@@ -128,3 +128,11 @@ palette overrides across the existing pages. The System option follows the devic
 light/dark preference and reacts to changes. Themes make no backend request and
 do not change model settings, stored chats, or the SQLite schema. See
 [Phase 11](PHASE_11.md).
+
+## Phase 12 suggestions
+
+`app/recommendations.py` reads saved model settings, usage events, advisory budgets
+and cooldowns. The endpoint performs no provider calls and stores no new data.
+Chat shows the explanation in a collapsible panel and changes the selected model
+only after the user clicks Choose. See [Phase 12](PHASE_12.md) for ranking rules and
+limits.

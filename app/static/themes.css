@@ -35,6 +35,15 @@
 :root[data-theme="daylight"] .fallback-control,
 :root[data-theme="ocean"] .coordination-control, :root[data-theme="ember"] .coordination-control,
 :root[data-theme="daylight"] .coordination-control { background: var(--theme-bg); border-color: var(--theme-border); color: var(--theme-text); }
+:root[data-theme="ocean"] .model-guide, :root[data-theme="ember"] .model-guide,
+:root[data-theme="daylight"] .model-guide { background:var(--theme-bg); border-color:var(--theme-border); color:var(--theme-text); }
+:root[data-theme="ocean"] .recommendation-card,
+:root[data-theme="ember"] .recommendation-card,
+:root[data-theme="daylight"] .recommendation-card { background:var(--theme-raised); border-color:var(--theme-border); color:var(--theme-text); }
+:root[data-theme="ocean"] .model-guide summary,
+:root[data-theme="ember"] .model-guide summary,
+:root[data-theme="daylight"] .model-guide summary { color:var(--theme-link); }
+:root[data-theme="daylight"] .recommendation-card small { color:var(--theme-muted); }
 :root[data-theme="ocean"] .panel, :root[data-theme="ember"] .panel,
 :root[data-theme="daylight"] .panel, :root[data-theme="ocean"] .message,
 :root[data-theme="ember"] .message, :root[data-theme="daylight"] .message,

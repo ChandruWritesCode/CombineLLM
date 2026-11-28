@@ -1,5 +1,12 @@
 # Changelog
 
+## Phase 12 — usage-aware model suggestions
+
+- Added a read-only Compare my models panel in chat with an explicit Choose action.
+- Explained manual price estimates, recent observed outcomes, advisory budgets,
+  cooldowns, and local-only exclusions for each configured model.
+- Kept provider quota and live availability unknown unless a real request proves an outcome.
+
 ## Phase 11 — appearance themes
 
 - Added Violet, Ocean, Ember, Daylight, and System theme choices in Settings.

@@ -49,6 +49,44 @@ async function refreshBudgets() {
     $("budget-notice").hidden = false;
   }
 }
+let recommendationRefresh = 0;
+async function loadRecommendations() {
+  const version = ++recommendationRefresh;
+  const data = await api(`/recommendations?local_only=${$("local-only").checked}`);
+  if (version !== recommendationRefresh) return;
+  $("recommendations").replaceChildren();
+  if (!data.models.length) {
+    const empty = document.createElement("p");
+    empty.textContent = "Add a model in Settings to compare choices.";
+    $("recommendations").append(empty);
+  }
+  for (const model of data.models) {
+    const card = document.createElement("div");
+    card.className = "recommendation-card";
+    const copy = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = `${model.name}${model.model_id === data.suggested_model_id ? " · Suggested" : ""}`;
+    const details = document.createElement("small");
+    const price = model.cost_per_1k_each_usd == null
+      ? "price unknown" : `$${Number(model.cost_per_1k_each_usd).toFixed(6)} per 1k input + 1k output tokens`;
+    details.textContent = `${price} · ${model.completed}/${model.observed_requests} recent completed attempts${model.reasons.length ? " · " + model.reasons.join("; ") : ""}`;
+    copy.append(title, details);
+    const choose = document.createElement("button");
+    choose.className = "quiet";
+    choose.type = "button";
+    choose.textContent = "Choose";
+    choose.dataset.eligible = String(model.eligible);
+    choose.disabled = !model.eligible || sending || !!activeMessage;
+    choose.onclick = () => {
+      if (sending || activeMessage) return;
+      $("chat-model").value = model.model_id;
+      $("chat-model").dispatchEvent(new Event("change"));
+      notice(`${model.name} selected. No prompt was sent.`);
+    };
+    card.append(copy, choose);
+    $("recommendations").append(card);
+  }
+}
 function controls() {
   providerReady = !!modelConnections.find(
     (m) => m.id === $("chat-model").value && m.enabled,
@@ -81,6 +119,9 @@ function controls() {
   $("new-chat").disabled = sending;
   document.querySelectorAll("#conversations button").forEach((button) => {
     button.disabled = sending;
+  });
+  document.querySelectorAll("#recommendations button").forEach((button) => {
+    button.disabled = button.dataset.eligible !== "true" || sending || !!activeMessage;
   });
 }
 function closeStream() {
@@ -243,6 +284,7 @@ function attach(conversationId, messageId) {
     activeMessage = null;
     controls();
     refreshBudgets();
+    if ($("model-guide").open) loadRecommendations().catch((e) => notice(e.message));
     listChats().catch((e) => notice(e.message));
   });
   source.addEventListener("removed", () => {
@@ -457,6 +499,14 @@ async function init() {
   refreshBudgets();
 }
 $("use-fallback").onchange = controls;
+$("model-guide").ontoggle = () => {
+  if ($("model-guide").open) loadRecommendations().catch((e) => notice(e.message));
+};
+$("refresh-recommendations").onclick = () => loadRecommendations().catch((e) => notice(e.message));
+$("local-only").onchange = () => {
+  controls();
+  if ($("model-guide").open) loadRecommendations().catch((e) => notice(e.message));
+};
 $("coordination-mode").onchange = () => {
   if ($("coordination-mode").value) $("use-fallback").checked = false;
   controls(); refreshBudgets();

@@ -1,7 +1,7 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 11 — appearance themes.**
+**Current release: Phase 12 — usage-aware model suggestions.**
 
 Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
 Provider availability depends on the service and your account; backend health does
@@ -41,6 +41,10 @@ final answer. See [Phase 10](docs/PHASE_10.md) for the number of calls, limits a
 privacy behavior.
 Choose a color theme in **Settings → Appearance**. The preference applies across
 pages in the same browser. See [Phase 11](docs/PHASE_11.md).
+Open **Compare my models** in chat to inspect a read-only suggestion based on
+configured prices, recent local request outcomes, advisory budgets, and cooldowns.
+Click **Choose** to use one; no prompt is sent until you submit it. See
+[Phase 12](docs/PHASE_12.md).
 
 ### Import Gemini from the environment
 
@@ -146,6 +150,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Phase 9: interface refresh](docs/PHASE_9.md) — colors, responsive layout and accessibility.
 - [Phase 10: coordinated models](docs/PHASE_10.md) — review, subtask synthesis, ratings and costs.
 - [Phase 11: appearance themes](docs/PHASE_11.md) — color presets and system preference.
+- [Phase 12: model suggestions](docs/PHASE_12.md) — explainable, read-only comparison.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.
@@ -165,6 +170,7 @@ app/model_api.py        Settings and application usage ledger
 app/costs.py            Decimal cost estimates and advisory budgets
 app/routing.py          Bounded opt-in ordered fallback
 app/coordination.py     Bounded draft/review and split/synthesis workflows
+app/recommendations.py  Read-only model comparisons from local data
 app/oauth.py            OpenRouter PKCE account connection
 app/providers/          Gemini, Anthropic and compatible text adapters
 app/static/             HTML, CSS, and JavaScript frontend

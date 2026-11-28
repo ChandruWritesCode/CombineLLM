@@ -30,8 +30,10 @@ Each phase should leave the application runnable.
     synthesis, per-step usage and cost estimates, and saved answer ratings.
 11. **Appearance themes (implemented):** five browser-side choices including the
     original vibrant palette, a light palette, and a system-following option.
-12. **Usage-aware recommendations (planned):** explain model availability and
-    estimated cost before a request; never claim provider quota without evidence.
+12. **Usage-aware suggestions (implemented):** show model comparison from manual
+    rates, recent local outcomes, advisory budgets, cooldowns and endpoint policy.
+13. **Guarded automatic selection (planned):** opt-in one-request model choice from
+    the Phase 12 ranking, with clear attribution and no hidden provider calls.
 
 The scope was revised at the user's request: settings and basic usage moved into
 Phase 4; ordered fallback and coordination are opt-in. Website subscriptions do

@@ -8,9 +8,9 @@
     <script src="/static/theme.js?v=11"></script>
     <link rel="stylesheet" href="/static/styles.css" />
     <link rel="stylesheet" href="/static/settings.css" />
-    <script defer src="/static/app.js?v=10"></script>
-    <link rel="stylesheet" href="/static/refresh.css?v=10" />
-    <link rel="stylesheet" href="/static/themes.css?v=11" />
+    <script defer src="/static/app.js?v=12"></script>
+    <link rel="stylesheet" href="/static/refresh.css?v=12" />
+    <link rel="stylesheet" href="/static/themes.css?v=12" />
     <script defer src="/static/ui.js"></script>
   </head>
   <body>
@@ -70,6 +70,12 @@
         <select id="collaborator-model" hidden></select>
         <small id="coordination-description">Choose a second model to review a draft or work on a subtask. Each step uses provider quota and appears in Usage.</small>
       </div>
+      <details id="model-guide" class="model-guide">
+        <summary>Compare my models</summary>
+        <p>Suggestions use your configured prices and CombineLLM request history. They cannot see provider quota or live availability. Choosing a suggestion does not send a prompt.</p>
+        <button id="refresh-recommendations" class="quiet" type="button">Refresh comparison</button>
+        <div id="recommendations" class="recommendation-list"></div>
+      </details>
       <div id="notice" role="status" hidden></div>
       <div id="budget-notice" role="status" hidden></div>
       <section id="thread" aria-label="Conversation messages" tabindex="0">

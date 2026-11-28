@@ -18,6 +18,7 @@ from app.conversations import router as conversations_router
 from app.model_api import router as model_router
 from app.oauth import router as oauth_router
 from app.providers.base import ProviderError
+from app.recommendations import router as recommendations_router
 from app.storage import Store
 
 
@@ -46,14 +47,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     application = FastAPI(
         title=settings.app_name,
-        version="0.11.0",
-        description="Self-hosted LLM backend. Phase 11: appearance themes.",
+        version="0.12.0",
+        description="Self-hosted LLM backend. Phase 12: model suggestions.",
         lifespan=lifespan,
     )
     application.state.settings = settings
     application.include_router(router)
     application.include_router(conversations_router)
     application.include_router(model_router)
+    application.include_router(recommendations_router)
     application.include_router(oauth_router)
     static = Path(__file__).parent / "static"
     application.mount("/static", StaticFiles(directory=static), name="static")
