@@ -25,6 +25,8 @@ async function api(path, options = {}) {
       data.error?.message ||
         (typeof data.detail === "string"
           ? data.detail
+          : Array.isArray(data.detail) && data.detail.length
+            ? data.detail[0].msg
           : `Request failed (${response.status}).`),
     );
   }
@@ -129,6 +131,11 @@ function controls() {
   $("rename").disabled = !selected || sending;
   $("delete").disabled = !selected || sending;
   $("new-chat").disabled = sending;
+  $("import-chat").disabled = sending;
+  for (const [id, format] of [["export-json", "json"], ["export-text", "text"]]) {
+    $(id).hidden = !selected || !!activeMessage;
+    if (selected) $(id).href = `/api/v1/conversations/${selected}/export?format=${format}`;
+  }
   document.querySelectorAll("#conversations button").forEach((button) => {
     button.disabled = sending;
   });
@@ -367,6 +374,24 @@ $("new-chat").onclick = async () => {
     notice();
   } catch (e) {
     notice(e.message);
+  }
+};
+$("import-chat").onclick = () => $("import-file").click();
+$("import-file").onchange = async () => {
+  const file = $("import-file").files?.[0];
+  if (!file) return;
+  try {
+    if (file.size > 5_000_000) throw new Error("The archive is too large to import.");
+    const archive = JSON.parse(await file.text());
+    const chat = await api("/conversations/import", {
+      method: "POST", body: JSON.stringify(archive),
+    });
+    await openChat(chat.id);
+    notice("Conversation imported. Check the selected model before sending a new message.");
+  } catch (e) {
+    notice(`Import failed: ${e.message}`);
+  } finally {
+    $("import-file").value = "";
   }
 };
 $("composer").onsubmit = async (event) => {

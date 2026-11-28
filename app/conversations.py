@@ -3,13 +3,15 @@
 import asyncio
 import logging
 from contextlib import aclosing
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from app.chat import get_provider, sse
 from app.coordination import build_coordinated_provider
+from app.portability import ConversationArchive, plain_text
 from app.providers.base import ChatProvider, ProviderError
 from app.schemas import Coordination
 from app.storage import Store
@@ -126,9 +128,28 @@ async def create_conversation(body: Title, db: Store = Depends(store)):
     return db.create(body.title)
 
 
+@router.post("/import", status_code=201)
+async def import_conversation(body: ConversationArchive, db: Store = Depends(store)):
+    return db.import_conversation(body)
+
+
 @router.get("/{conversation_id}")
 async def get_conversation(conversation_id: str, db: Store = Depends(store)):
     return db.get(conversation_id)
+
+
+@router.get("/{conversation_id}/export")
+async def export_conversation(
+    conversation_id: str,
+    format: Literal["json", "text"] = "json",
+    db: Store = Depends(store),
+):
+    archive = db.export_conversation(conversation_id)
+    filename = f"conversation-{conversation_id}.{'json' if format == 'json' else 'txt'}"
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    if format == "text":
+        return PlainTextResponse(plain_text(archive), headers=headers)
+    return JSONResponse(archive.model_dump(mode="json"), headers=headers)
 
 
 @router.patch("/{conversation_id}")

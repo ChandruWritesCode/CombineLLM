@@ -9,6 +9,7 @@ from uuid import uuid4
 
 from fastapi import HTTPException
 
+from app.portability import ConversationArchive
 from app.schemas import ChatRequest, Message
 
 
@@ -186,6 +187,62 @@ class Store:
         with self.connect() as db:
             db.execute("DELETE FROM conversations WHERE id=?", (conversation_id,))
 
+    def export_conversation(self, conversation_id):
+        with self.connect() as db:
+            db.execute("BEGIN")
+            conversation = db.execute(
+                "SELECT title FROM conversations WHERE id=?", (conversation_id,)
+            ).fetchone()
+            if conversation is None:
+                raise HTTPException(404, "Conversation not found")
+            rows = db.execute(
+                "SELECT role,content,status,provider,model,created_at FROM messages "
+                "WHERE conversation_id=? ORDER BY seq",
+                (conversation_id,),
+            ).fetchall()
+            if any(row["status"] == "streaming" for row in rows):
+                raise HTTPException(409, "Stop or finish the response before exporting this chat")
+            try:
+                return ConversationArchive.model_validate(
+                    {
+                        "format": "combinellm-conversation",
+                        "version": 1,
+                        "title": conversation["title"],
+                        "messages": [dict(row) for row in rows],
+                    }
+                )
+            except ValueError as exc:
+                raise HTTPException(
+                    422, "This conversation exceeds the portable archive limits"
+                ) from exc
+
+    def import_conversation(self, archive: ConversationArchive):
+        conversation_id = str(uuid4())
+        stamp = now()
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            db.execute(
+                "INSERT INTO conversations (id,title,created_at,updated_at) VALUES (?,?,?,?)",
+                (conversation_id, archive.title, stamp, stamp),
+            )
+            for message in archive.messages:
+                db.execute(
+                    "INSERT INTO messages "
+                    "(id,conversation_id,role,content,status,provider,model,created_at) "
+                    "VALUES (?,?,?,?,?,?,?,?)",
+                    (
+                        str(uuid4()),
+                        conversation_id,
+                        message.role,
+                        message.content,
+                        message.status,
+                        message.provider,
+                        message.model,
+                        message.created_at.isoformat(),
+                    ),
+                )
+        return self.get(conversation_id)
+
     def begin(self, conversation_id, content, max_output_tokens, provider):
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
@@ -206,6 +263,7 @@ class Store:
                     previous["role"] == "user"
                     and answer["role"] == "assistant"
                     and answer["status"] == "complete"
+                    and answer["content"].strip()
                 ):
                     history.extend(
                         [

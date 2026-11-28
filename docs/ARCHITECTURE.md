@@ -155,3 +155,13 @@ Concurrent requests therefore cannot both claim the last local slot. A blocked
 attempt is saved as skipped with `local_request_limit`; it never contacts the
 provider. Caps are stored in the existing connection/preferences JSON, so no
 schema migration is needed. See [Phase 14](PHASE_14.md).
+
+## Phase 15 portability
+
+`app/portability.py` defines the versioned JSON transcript. Export reads a
+consistent SQLite snapshot and rejects a chat with an active response. Import
+validates the entire archive, then writes a new conversation and message IDs in
+one transaction. It keeps text, statuses, model labels and timestamps, while
+leaving model connection IDs, credentials, usage ledger rows and attempt groups
+behind. Readable text export uses the same validated snapshot. See
+[Phase 15](PHASE_15.md).

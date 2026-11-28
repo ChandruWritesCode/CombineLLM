@@ -1,5 +1,13 @@
 # Changelog
 
+## Phase 15 — conversation portability
+
+- Added JSON and readable text exports for saved conversations.
+- Added validated JSON import that creates a new chat without copying credentials,
+  model connections or usage ledger entries.
+- Preserved message text, completion status, model labels and timestamps; rejected
+  active exports and malformed archives.
+
 ## Phase 14 — local request ceilings
 
 - Added optional monthly workspace and per-model request ceilings in Settings.

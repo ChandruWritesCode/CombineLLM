@@ -24,6 +24,9 @@ main { min-width:0; }
 header,.management header { background:#151429eb; border-bottom:1px solid #37304e; backdrop-filter:blur(16px); }
 h1,h2,h3 { color:#f7f3ff; letter-spacing:-.04em; }
 header h1 { font-size:clamp(1.2rem,2.5vw,1.9rem); }
+.header-actions { flex-wrap:wrap; justify-content:flex-end; }
+.header-actions #export-json:not([hidden]),.header-actions #export-text:not([hidden]) { display:inline-flex; margin-left:0; color:#e6dcf8; text-decoration:none; }
+#import-chat { width:100%; text-align:left; }
 .provider-bar { background:#19172d; border-color:#37304e; gap:12px; flex-wrap:wrap; }
 .badge { color:#94f5df; background:#173d3d; border:1px solid #377672; border-radius:999px; }
 .fallback-control { background:#17162a; border-bottom:1px solid #343047; line-height:1.5; }

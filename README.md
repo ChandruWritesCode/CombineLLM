@@ -1,7 +1,7 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 14 — local request ceilings.**
+**Current release: Phase 15 — conversation portability.**
 
 Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
 Provider availability depends on the service and your account; backend health does
@@ -52,6 +52,10 @@ message. See [Phase 13](docs/PHASE_13.md).
 Set optional monthly **request ceilings** for the workspace or a model in Settings.
 These stop new calls through CombineLLM after its local count is reached. They do
 not control provider-side billing. See [Phase 14](docs/PHASE_14.md).
+Export a saved conversation as JSON for reimport or as a readable text transcript.
+Use **Import conversation** in the sidebar to create a new chat from a JSON archive.
+Exports include conversation text, so keep downloaded files private. See
+[Phase 15](docs/PHASE_15.md).
 
 ### Import Gemini from the environment
 
@@ -160,6 +164,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Phase 12: model suggestions](docs/PHASE_12.md) — explainable, read-only comparison.
 - [Phase 13: automatic selection](docs/PHASE_13.md) — opt-in one-call choice and attribution.
 - [Phase 14: request ceilings](docs/PHASE_14.md) — local monthly call limits and accounting.
+- [Phase 15: conversation portability](docs/PHASE_15.md) — transcript export and import.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.
@@ -178,6 +183,7 @@ app/connections.py      Model registry and encrypted credentials
 app/model_api.py        Settings and application usage ledger
 app/costs.py            Decimal cost estimates and advisory budgets
 app/limits.py           Transactional local request ceilings
+app/portability.py      Versioned text-only conversation archive contract
 app/routing.py          Bounded opt-in ordered fallback
 app/coordination.py     Bounded draft/review and split/synthesis workflows
 app/recommendations.py  Read-only model comparisons from local data

@@ -36,10 +36,12 @@ Each phase should leave the application runnable.
     from the Phase 12 ranking, with clear attribution and no hidden provider calls.
 14. **Local request ceilings (implemented):** optional workspace and per-model
     monthly counts, transactional reservations and visible skipped attempts.
-15. **Conversation portability (planned):** export and import saved chats with
-    safe text-only formats and clear credential boundaries.
+15. **Conversation portability (implemented):** versioned JSON transcript export
+    and import, readable text export, and explicit credential/usage boundaries.
 
 The scope was revised at the user's request: settings and basic usage moved into
 Phase 4; ordered fallback and coordination are opt-in. Website subscriptions do
-not automatically grant API access. See [Phase 4](PHASE_4.md), [the changelog](../CHANGELOG.md)
-[Phase 5](PHASE_5.md), [Phase 6](PHASE_6.md) and [Git workflow](CONTRIBUTING.md). The user reported successful live Groq generation after Phase 6.
+not automatically grant API access. See [Phase 4](PHASE_4.md),
+[Phase 5](PHASE_5.md), [Phase 6](PHASE_6.md), [Phase 15](PHASE_15.md),
+[the changelog](../CHANGELOG.md), and [Git workflow](CONTRIBUTING.md). The user
+reported successful live Groq generation after Phase 6.
