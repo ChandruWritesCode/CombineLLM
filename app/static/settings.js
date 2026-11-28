@@ -69,6 +69,19 @@ function actionButton(text, action) {
   b.onclick = action;
   return b;
 }
+async function loadDiagnostics() {
+  try {
+    const report = await api("/diagnostics");
+    const conversations = `${report.conversations} conversation${report.conversations === 1 ? "" : "s"}`;
+    const connections = `${report.model_connections} model connection${report.model_connections === 1 ? "" : "s"}`;
+    const replies = `${report.active_generations} active ${report.active_generations === 1 ? "reply" : "replies"}`;
+    $("diagnostics-status").textContent = report.storage === "ready"
+      ? `Saved data ready · ${conversations} · ${connections} (${report.enabled_models} enabled) · ${report.credential_key_present ? "Credential key present" : "Credential key missing"} · ${replies}. Cloud availability is not checked.`
+      : "Saved data needs attention. See the backup and restore guide before making changes.";
+  } catch (error) {
+    $("diagnostics-status").textContent = `Local status unavailable: ${error.message}`;
+  }
+}
 async function load() {
   [models, preferences] = await Promise.all([api("/models"), api("/settings")]);
   $("model-list").replaceChildren();
@@ -172,6 +185,7 @@ async function load() {
   }
 }
 $("add-model").onclick = () => edit();
+$("refresh-diagnostics").onclick = loadDiagnostics;
 $("model-kind").onchange = kindChanged;
 $("model-cancel").onclick = () => $("model-dialog").close();
 $("confirm-cancel").onclick = () => $("confirm-dialog").close();
@@ -265,3 +279,4 @@ load()
     }
   })
   .catch((e) => notice(e.message));
+loadDiagnostics();

@@ -16,6 +16,7 @@ RUN useradd --create-home --uid 10001 appuser \
 COPY --from=builder /srv/combinellm/.venv ./.venv
 COPY --chown=appuser:appuser app ./app
 COPY --chown=appuser:appuser scripts ./scripts
+COPY --chown=appuser:appuser docs ./docs
 USER appuser
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \

@@ -44,7 +44,8 @@ Each phase should leave the application runnable.
     selection with a visible explanation and safeguards.
 18. **Collaboration clarity (implemented):** retain bounded intermediate results
     and show each coordinated step's result, status, tokens, and cost estimate.
-19. **Release readiness (planned):** backup/restore guidance and local diagnostics.
+19. **Release readiness (implemented):** local diagnostics, backup verification,
+    non-overwriting restore tooling, and clearer setup/recovery guidance.
 
 The scope was revised at the user's request: settings and basic usage moved into
 Phase 4; ordered fallback and coordination are opt-in. Website subscriptions do

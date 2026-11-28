@@ -1,5 +1,13 @@
 # Changelog
 
+## Phase 19 — release readiness
+
+- Added a local Settings status panel and a read-only diagnostics endpoint.
+- Added backup verification and restore-to-new-path tooling that checks SQLite
+  integrity and matching credential keys without replacing live data.
+- Expanded setup and recovery guidance, including Docker backup copies and safe
+  restore steps.
+
 ## Phase 18 — collaboration clarity
 
 - Saved bounded intermediate results for coordinated answers and displayed them

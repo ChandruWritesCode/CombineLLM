@@ -189,3 +189,12 @@ messages; the final answer remains the only assistant text used in future model
 context. The existing attempt group supplies per-step status, tokens and cost
 estimates. Portable JSON exports exclude these internal results. See
 [Phase 18](PHASE_18.md).
+
+## Phase 19 diagnostics and recovery
+
+`GET /api/v1/diagnostics` reads SQLite quick-check status, schema version, local
+record counts, key-file presence and active-generation count. It returns no paths,
+credentials, provider secrets or cloud-health claims. `scripts.restore` validates
+SQLite integrity and decryptability of saved credentials using the adjacent key,
+then copies a verified backup to a new path with exclusive creation. It never
+overwrites a live database. See [Phase 19](PHASE_19.md).

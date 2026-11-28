@@ -5,6 +5,8 @@
 !uv.lock
 !scripts/
 !scripts/**
+!docs/
+!docs/**
 scripts/**/__pycache__/
 scripts/**/*.pyc
 app/**/__pycache__/

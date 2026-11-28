@@ -1,7 +1,7 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 18 — collaboration clarity.**
+**Current release: Phase 19 — release readiness.**
 
 Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
 Provider availability depends on the service and your account; backend health does
@@ -66,6 +66,10 @@ see [Phase 17](docs/PHASE_17.md).
 Coordinated answers now retain their intermediate draft, review, planning, or
 subtask results locally. Expand **Model attempts** on the answer to inspect each
 step alongside token counts and estimated costs. See [Phase 18](docs/PHASE_18.md).
+Open **Settings → Local status** to check storage health, saved conversations,
+model connections, and the credential-key file without contacting providers.
+Backups can be verified and restored to a new path with the local restore command.
+See [Phase 19](docs/PHASE_19.md) and [Operations](docs/OPERATIONS.md).
 
 ### Import Gemini from the environment
 
@@ -178,6 +182,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Phase 16: model capability hints](docs/PHASE_16.md) — manual context and task labels.
 - [Phase 17: task-aware routing](docs/PHASE_17.md) — one-call choice using your hints.
 - [Phase 18: collaboration clarity](docs/PHASE_18.md) — saved step results and usage.
+- [Phase 19: release readiness](docs/PHASE_19.md) — diagnostics and safe restore.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.

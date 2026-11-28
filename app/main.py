@@ -15,6 +15,7 @@ from app.config import Settings
 from app.connections import Connections
 from app.conversations import Generations
 from app.conversations import router as conversations_router
+from app.diagnostics import router as diagnostics_router
 from app.model_api import router as model_router
 from app.oauth import router as oauth_router
 from app.providers.base import ProviderError
@@ -47,8 +48,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     application = FastAPI(
         title=settings.app_name,
-        version="0.18.0",
-        description="Self-hosted LLM backend. Phase 18: collaboration clarity.",
+        version="0.19.0",
+        description="Self-hosted LLM backend. Phase 19: release readiness.",
         lifespan=lifespan,
     )
     application.state.settings = settings
@@ -56,6 +57,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(conversations_router)
     application.include_router(model_router)
     application.include_router(recommendations_router)
+    application.include_router(diagnostics_router)
     application.include_router(oauth_router)
     static = Path(__file__).parent / "static"
     application.mount("/static", StaticFiles(directory=static), name="static")
@@ -75,6 +77,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @application.get("/usage", include_in_schema=False)
     async def usage_page():
         return FileResponse(static / "usage.html")
+
+    @application.get("/guide/operations", include_in_schema=False)
+    async def operations_guide():
+        return FileResponse(
+            Path(__file__).parent.parent / "docs" / "OPERATIONS.md",
+            media_type="text/plain; charset=utf-8",
+        )
 
     @application.exception_handler(RequestValidationError)
     async def validation_error(request: Request, exc: RequestValidationError):

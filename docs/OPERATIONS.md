@@ -43,6 +43,26 @@ Store it securely with its database; losing it makes credentials unreadable.
 
 ## Restore
 
+Verify a backup and its matching key before use. This reads the backup without
+writing to it or contacting a model provider:
+
+```bash
+uv run python -m scripts.restore backups/chat-backup.sqlite3
+```
+
+To prepare a **new** native database/key pair, choose a destination that does not
+exist. The command checks SQLite integrity and decryptability of saved credentials,
+then copies both files with private permissions. It refuses to overwrite either
+destination file:
+
+```bash
+uv run python -m scripts.restore backups/chat-backup.sqlite3 data/restored.sqlite3
+```
+
+For Docker, the same utility is available inside the container. Copy a backup and
+its matching `.key` into the container's data volume first, then run the verifier
+or restore into a new path there. Review the new pair before switching the app.
+
 Stop all processes using the target database first. Preserve the current database
 and its `-wal` and `-shm` files together in a separate recovery directory. Do not
 leave old sidecars beside the restored database. Copy the backup into the configured
@@ -52,6 +72,10 @@ For Docker, use a one-off container with the existing named volume to perform th
 copy, preserving UID 10001 ownership. Restart the backend and verify conversations
 before deleting the recovery copy. Do not restore an untrusted database or an older
 application over a newer schema. Ask for help if unsure which volume is active.
+
+**Local status** in Settings checks database health and key-file presence. It does
+not prove any cloud provider is available. Keep a tested backup before upgrades,
+especially when a phase changes the database schema.
 
 ## Provider unavailable
 
@@ -103,10 +127,10 @@ The current-month budget overview uses UTC and ignores historical table filters.
 If the estimate is incomplete, consult provider billing before relying on it.
 See [Phase 5](PHASE_5.md) for excluded charges and accounting limitations.
 
-## Live free-API check — 2026-11-26
+## Historical free-API check — 2026-11-26
 
-Development is paused at Phase 5 at the user's request. The previously completed
-65-test suite and other release checks were not rerun.
+The following observations were recorded during Phase 5. They describe that
+specific check and do not determine current provider availability.
 
 Google's official pricing page lists Gemma 4 input/output as free of charge:
 https://aistudio.google.com/docs/pricing#gemma-4
@@ -132,7 +156,8 @@ chat. Usage records every attempted connection, including failures; a chain can
 consume quota on multiple providers. Disabled choices require a settings update.
 Stop closes the active attempt. No fallback occurs after partial output, on content
 rejection or on authentication errors. See [Phase 6](PHASE_6.md) for the bounded
-policy; successful live cloud generation is still unverified.
+policy. The user later reported a successful live Groq response; the current
+release checks use simulated providers.
 
 ## Phase 7 routing controls
 
