@@ -34,6 +34,7 @@ class Connection(BaseModel):
     input_price_per_million: Money | None = None
     output_price_per_million: Money | None = None
     monthly_budget_usd: Money | None = None
+    monthly_request_limit: int | None = Field(default=None, ge=1, le=1000000)
     include_usage: bool = True
     token_parameter: Literal["max_tokens", "max_completion_tokens"] = "max_tokens"
 
@@ -93,6 +94,7 @@ class Preferences(BaseModel):
     default_model_id: str | None = None
     fallback_model_ids: list[str] = Field(default_factory=list, max_length=3)
     monthly_budget_usd: Money | None = None
+    monthly_request_limit: int | None = Field(default=None, ge=1, le=1000000)
     budget_warning_percent: int = Field(default=80, ge=1, le=100)
     max_output_tokens: int = Field(default=2048, ge=1, le=8192)
     system_prompt: str = Field(default="", max_length=10000)

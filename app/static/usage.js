@@ -10,8 +10,8 @@ async function refresh() {
   for (const id of ["start", "end"])
     if ($(id).value) params.set(id, $(id).value);
   if ($("filter-model").value) params.set("model_id", $("filter-model").value);
-  const [data, budgets, quality] = await Promise.all([
-    api(`/usage?${params}`), api("/budgets"), api("/quality"),
+  const [data, budgets, quality, limits] = await Promise.all([
+    api(`/usage?${params}`), api("/budgets"), api("/quality"), api("/limits"),
   ]);
   if (version !== refreshVersion) return;
   $("export").href = `/api/v1/usage/export?${params}`;
@@ -20,7 +20,7 @@ async function refresh() {
     ["Requests", data.requests],
     ["Completed", data.complete],
     ["Failed", data.failed],
-    ["Skipped (cooldown)", data.skipped],
+    ["Skipped locally", data.skipped],
     ["Reported tokens", data.reported_tokens],
     ["Unknown usage", data.unknown_usage],
   ]) {
@@ -38,6 +38,10 @@ async function refresh() {
   for (const budget of [{name: "Workspace", ...budgets.workspace}, ...budgets.models.filter(m => m.budget_usd !== null)]) {
     const text = `${budget.name} · ${budgets.month_utc}: $${formatCost(budget.estimated_cost_usd)} estimated / ${budget.budget_usd === null ? "no budget set" : "$" + budget.budget_usd + " target"} · ${budget.status.replace("_", " ")} · ${budget.unknown_cost_requests} unknown-cost requests`;
     $("budgets").append(node("p", text));
+  }
+  $("request-limits").replaceChildren();
+  for (const item of [{name:"Workspace", ...limits.workspace}, ...limits.models.filter(m => m.limit !== null)]) {
+    $("request-limits").append(node("p", `${item.name}: ${item.count} attempted / ${item.limit === null ? "no ceiling" : item.limit + " allowed"}${item.reached ? " · ceiling reached" : ""}`));
   }
   $("quality").replaceChildren();
   for (const group of quality.groups) {
@@ -78,6 +82,7 @@ async function refresh() {
       event.total_tokens ?? "Unknown",
       event.duration_ms == null ? "—" : `${event.duration_ms} ms`,
       event.estimated_cost_usd == null ? "Unknown" : formatCost(event.estimated_cost_usd),
+      event.error_code || "—",
       event.attempt_group_id ? `${event.attempt_group_id} / ${event.attempt_number}` : "Legacy request",
     ])
       row.append(node("td", value));

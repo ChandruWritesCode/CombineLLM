@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/static/styles.css" />
     <link rel="stylesheet" href="/static/settings.css" />
     <script defer src="/static/common.js"></script>
-    <script defer src="/static/settings.js"></script>
+    <script defer src="/static/settings.js?v=14"></script>
     <link rel="stylesheet" href="/static/refresh.css?v=10" />
     <link rel="stylesheet" href="/static/themes.css?v=11" />
     <script defer src="/static/ui.js"></script>
@@ -90,10 +90,14 @@
             <label>Monthly workspace budget (USD)
               <input id="workspace-budget" type="number" min="0" max="1000000" step="0.00000001" placeholder="No budget" />
             </label>
+            <label>Monthly workspace request ceiling
+              <input id="workspace-request-limit" type="number" min="1" max="1000000" step="1" placeholder="No ceiling" />
+            </label>
             <label>Warn at percentage of budget
               <input id="budget-warning" type="number" min="1" max="100" value="80" required />
             </label>
             <p class="full">Budgets are advisory monthly UTC targets. They do not block requests or guarantee a spending cap.</p>
+            <p class="full">Request ceilings stop new provider calls through this app after the local UTC-month count is reached. Connection tests and failed attempts count. Provider-side usage and billing remain separate.</p>
             <div class="full">
               <h3>Optional fallback order</h3>
               <p>When you enable fallback in chat, the selected model is tried first, then these models in order. Up to four attempts total, within 120 seconds. Each provider can receive the same conversation and consume quota or credits. Budgets only warn. No fallback after partial text, authentication errors, or content rejection.</p>
@@ -239,6 +243,9 @@
           </label>
           <label>Monthly model budget (USD)
             <input id="model-budget" type="number" min="0" max="1000000" step="0.00000001" placeholder="No budget" />
+          </label>
+          <label>Monthly model request ceiling
+            <input id="model-request-limit" type="number" min="1" max="1000000" step="1" placeholder="No ceiling" />
           </label>
           <p class="full">Enter your own prices. Blank means unknown; zero means a zero-price estimate. Prices apply only to future requests. Estimates exclude discounts, special cache rates and extra charges. Budgets only warn; they never stop spending.</p>
           <label>Shared usage group<input id="usage-group" maxlength="100" placeholder="Same label for the same quota pool" /></label>

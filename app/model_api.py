@@ -15,6 +15,7 @@ from pydantic import SecretStr
 from app.config import Settings
 from app.connections import Connection, Preferences
 from app.costs import current_budgets, estimate, total_cost
+from app.limits import current_limits, limit_reason
 from app.policies import cool_down, remaining
 from app.providers.base import ProviderError
 from app.providers.compatible import APIProvider
@@ -44,6 +45,8 @@ class TrackedProvider:
         self.attempt_number = 1
         self.input_price = config.get("input_price_per_million")
         self.output_price = config.get("output_price_per_million")
+        self.model_request_limit = config.get("monthly_request_limit")
+        self.workspace_request_limit = config.get("workspace_request_limit")
 
     async def stream(self, request):
         if request.system is None and self.system_prompt:
@@ -53,12 +56,22 @@ class TrackedProvider:
         usage = None
         status = "failed"
         error = None
+        started_at = now()
+        limit_error = None
         with self.store.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            limit_error = limit_reason(
+                db,
+                started_at[:7],
+                self.model_id,
+                self.workspace_request_limit,
+                self.model_request_limit,
+            )
             db.execute(
                 """INSERT INTO usage_events
                 (id,model_id,label,provider,model,source,status,started_at,
                  input_price_per_million,output_price_per_million,attempt_group_id,attempt_number,usage_group)
-                VALUES (?,?,?,?,?,?,'running',?,?,?,?,?,?)""",
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (
                     event_id,
                     self.model_id,
@@ -66,7 +79,8 @@ class TrackedProvider:
                     self.name,
                     self.model,
                     self.source,
-                    now(),
+                    "skipped" if limit_error else "running",
+                    started_at,
                     self.input_price,
                     self.output_price,
                     self.attempt_group_id,
@@ -75,6 +89,9 @@ class TrackedProvider:
                 ),
             )
         try:
+            if limit_error:
+                status = "skipped"
+                raise ProviderError("local_request_limit", limit_error, 429)
             wait = remaining(self.store, self.pool)
             if wait:
                 status = "skipped"
@@ -146,6 +163,7 @@ def build_provider(app, model_id=None, source="chat"):
     else:
         provider = APIProvider(config, key)
     config["system_prompt"] = config["system_prompt"] or prefs.system_prompt
+    config["workspace_request_limit"] = prefs.monthly_request_limit
     return TrackedProvider(provider, app.state.store, config, source)
 
 
@@ -224,6 +242,11 @@ async def get_budgets(request: Request):
     return current_budgets(request.app.state.connections)
 
 
+@router.get("/limits")
+async def get_limits(request: Request):
+    return current_limits(request.app.state.connections)
+
+
 @router.get("/quality")
 async def get_quality(request: Request):
     """Local, subjective answer ratings grouped by answer workflow."""
@@ -272,18 +295,22 @@ async def get_usage(
         group["estimated_cost_usd"] = str(
             Decimal(group["estimated_cost_usd"]) + Decimal(row["estimated_cost_usd"] or "0")
         )
-        group["unknown_cost_requests"] += row["estimated_cost_usd"] is None
+        group["unknown_cost_requests"] += (
+            row["status"] != "skipped" and row["estimated_cost_usd"] is None
+        )
         group["requests"] += 1
         group[row["status"]] += 1
         group["reported_tokens"] += row["total_tokens"] or 0
-        group["unknown_usage"] += row["total_tokens"] is None
+        group["unknown_usage"] += row["status"] != "skipped" and row["total_tokens"] is None
         group["duration_ms"] += row["duration_ms"] or 0
     return {
         "estimated_cost_usd": str(total_cost(rows)),
-        "unknown_cost_requests": sum(r["estimated_cost_usd"] is None for r in rows),
+        "unknown_cost_requests": sum(
+            r["status"] != "skipped" and r["estimated_cost_usd"] is None for r in rows
+        ),
         "requests": len(rows),
         "reported_tokens": sum(r["total_tokens"] or 0 for r in rows),
-        "unknown_usage": sum(r["total_tokens"] is None for r in rows),
+        "unknown_usage": sum(r["status"] != "skipped" and r["total_tokens"] is None for r in rows),
         "complete": sum(r["status"] == "complete" for r in rows),
         "failed": sum(r["status"] == "failed" for r in rows),
         "skipped": sum(r["status"] == "skipped" for r in rows),

@@ -1,5 +1,12 @@
 # Changelog
 
+## Phase 14 — local request ceilings
+
+- Added optional monthly workspace and per-model request ceilings in Settings.
+- Reserved an attempt slot atomically before provider calls, including concurrent requests.
+- Recorded blocked calls as skipped without counting them as unknown token or cost usage.
+- Added a Usage summary and excluded capped models from suggestions and automatic choice.
+
 ## Phase 13 — guarded automatic selection
 
 - Added an opt-in one-message automatic model choice in saved chat.

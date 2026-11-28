@@ -6,6 +6,7 @@ from math import ceil
 from fastapi import APIRouter, Request
 
 from app.costs import current_budgets
+from app.limits import current_limits
 from app.policies import is_local, remaining
 
 router = APIRouter(prefix="/api/v1", tags=["recommendations"])
@@ -36,6 +37,8 @@ def compare_models(app, local_only=False):
     registry = app.state.connections
     budgets = current_budgets(registry)
     budget_by_id = {item["model_id"]: item for item in budgets["models"]}
+    limits = current_limits(registry)
+    limit_by_id = {item["model_id"]: item for item in limits["models"]}
     items = []
     for config in registry.list():
         model_id = config["id"]
@@ -45,6 +48,7 @@ def compare_models(app, local_only=False):
         )
         cooldown = ceil(remaining(registry.store, pool))
         budget = budget_by_id[model_id]
+        model_limit = limit_by_id[model_id]
         observed = _observations(registry.store, model_id)
         price = _price(config)
         reasons = []
@@ -54,6 +58,10 @@ def compare_models(app, local_only=False):
             reasons.append("Excluded by local-only mode")
         if cooldown:
             reasons.append(f"Shared cooldown: about {cooldown}s remaining")
+        if limits["workspace"]["reached"]:
+            reasons.append("Workspace monthly request ceiling reached")
+        if model_limit["reached"]:
+            reasons.append("Model monthly request ceiling reached")
         if budget["status"] in {"warning", "exceeded"}:
             reasons.append(f"Manual budget {budget['status']}")
         if budget["unknown_cost_requests"]:
@@ -62,7 +70,13 @@ def compare_models(app, local_only=False):
             reasons.append("Configured price is unknown")
         if not observed["observed_requests"]:
             reasons.append("No recent chat outcomes recorded")
-        eligible = config["enabled"] and (not local_only or local) and cooldown == 0
+        eligible = (
+            config["enabled"]
+            and (not local_only or local)
+            and cooldown == 0
+            and not limits["workspace"]["reached"]
+            and not model_limit["reached"]
+        )
         items.append(
             {
                 "model_id": model_id,
@@ -72,6 +86,8 @@ def compare_models(app, local_only=False):
                 "eligible": eligible,
                 "cooldown_seconds": cooldown,
                 "budget_status": budget["status"],
+                "request_limit": model_limit["limit"],
+                "request_remaining": model_limit["remaining"],
                 "cost_per_1k_each_usd": str(price) if price is not None else None,
                 **observed,
                 "reasons": reasons,

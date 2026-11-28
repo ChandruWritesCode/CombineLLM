@@ -1,7 +1,7 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 13 — guarded automatic model selection.**
+**Current release: Phase 14 — local request ceilings.**
 
 Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
 Provider availability depends on the service and your account; backend health does
@@ -49,6 +49,9 @@ For one saved-chat message, enable **Choose a model automatically for my next
 message**. The app checks the ranking when you send and makes one provider request.
 It records the selected model on the answer and turns the option off after that
 message. See [Phase 13](docs/PHASE_13.md).
+Set optional monthly **request ceilings** for the workspace or a model in Settings.
+These stop new calls through CombineLLM after its local count is reached. They do
+not control provider-side billing. See [Phase 14](docs/PHASE_14.md).
 
 ### Import Gemini from the environment
 
@@ -156,6 +159,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Phase 11: appearance themes](docs/PHASE_11.md) — color presets and system preference.
 - [Phase 12: model suggestions](docs/PHASE_12.md) — explainable, read-only comparison.
 - [Phase 13: automatic selection](docs/PHASE_13.md) — opt-in one-call choice and attribution.
+- [Phase 14: request ceilings](docs/PHASE_14.md) — local monthly call limits and accounting.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.
@@ -173,6 +177,7 @@ app/schemas.py          Provider-neutral chat messages
 app/connections.py      Model registry and encrypted credentials
 app/model_api.py        Settings and application usage ledger
 app/costs.py            Decimal cost estimates and advisory budgets
+app/limits.py           Transactional local request ceilings
 app/routing.py          Bounded opt-in ordered fallback
 app/coordination.py     Bounded draft/review and split/synthesis workflows
 app/recommendations.py  Read-only model comparisons from local data

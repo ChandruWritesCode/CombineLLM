@@ -145,3 +145,13 @@ before the turn is saved and sends through the normal tracked provider path. The
 is no fallback or coordination in that request. Schema 7 stores selection mode and
 a short explanation on the answer. The usage ledger records the single actual
 provider attempt. See [Phase 13](PHASE_13.md).
+
+## Phase 14 request ceilings
+
+`app/limits.py` counts current UTC-month usage events excluding skipped rows. The
+tracked provider starts an immediate SQLite transaction, checks workspace and
+model ceilings, and inserts a running reservation before contacting a provider.
+Concurrent requests therefore cannot both claim the last local slot. A blocked
+attempt is saved as skipped with `local_request_limit`; it never contacts the
+provider. Caps are stored in the existing connection/preferences JSON, so no
+schema migration is needed. See [Phase 14](PHASE_14.md).

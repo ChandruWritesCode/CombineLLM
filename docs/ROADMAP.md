@@ -34,8 +34,10 @@ Each phase should leave the application runnable.
     rates, recent local outcomes, advisory budgets, cooldowns and endpoint policy.
 13. **Guarded automatic selection (implemented):** opt-in one-request model choice
     from the Phase 12 ranking, with clear attribution and no hidden provider calls.
-14. **Spending guardrails (planned):** optional local request ceilings with clear
-    limits, while preserving provider-side billing as the source of truth.
+14. **Local request ceilings (implemented):** optional workspace and per-model
+    monthly counts, transactional reservations and visible skipped attempts.
+15. **Conversation portability (planned):** export and import saved chats with
+    safe text-only formats and clear credential boundaries.
 
 The scope was revised at the user's request: settings and basic usage moved into
 Phase 4; ordered fallback and coordination are opt-in. Website subscriptions do

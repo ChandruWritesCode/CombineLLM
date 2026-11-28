@@ -43,6 +43,7 @@ function edit(model = null) {
   $("input-price").value = model?.input_price_per_million ?? "";
   $("output-price").value = model?.output_price_per_million ?? "";
   $("model-budget").value = model?.monthly_budget_usd ?? "";
+  $("model-request-limit").value = model?.monthly_request_limit ?? "";
   $("usage-group").value = model?.usage_group || "";
   $("allow-fallback").checked = model?.allow_fallback ?? true;
   $("model-enabled").checked = model?.enabled ?? true;
@@ -155,6 +156,7 @@ async function load() {
   $("default-model").value = preferences.default_model_id || "";
   $("default-tokens").value = preferences.max_output_tokens;
   $("workspace-budget").value = preferences.monthly_budget_usd ?? "";
+  $("workspace-request-limit").value = preferences.monthly_request_limit ?? "";
   $("budget-warning").value = preferences.budget_warning_percent ?? 80;
   $("default-system").value = preferences.system_prompt;
   for (let index = 1; index <= 3; index++) {
@@ -185,6 +187,7 @@ $("model-form").onsubmit = async (event) => {
     input_price_per_million: $("input-price").value || null,
     output_price_per_million: $("output-price").value || null,
     monthly_budget_usd: $("model-budget").value || null,
+    monthly_request_limit: $("model-request-limit").value ? Number($("model-request-limit").value) : null,
     usage_group: $("usage-group").value,
     allow_fallback: $("allow-fallback").checked,
     name: $("model-name").value,
@@ -229,6 +232,7 @@ $("defaults-form").onsubmit = async (event) => {
       method: "PUT",
       body: JSON.stringify({
         monthly_budget_usd: $("workspace-budget").value || null,
+        monthly_request_limit: $("workspace-request-limit").value ? Number($("workspace-request-limit").value) : null,
         budget_warning_percent: Number($("budget-warning").value),
         fallback_model_ids: [1, 2, 3].map(i => $(`fallback-${i}`).value).filter(Boolean),
         default_model_id: $("default-model").value || null,

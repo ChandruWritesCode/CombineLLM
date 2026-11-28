@@ -65,7 +65,8 @@ def current_budgets(registry, clock=None):
         rows = [
             dict(r)
             for r in db.execute(
-                "SELECT * FROM usage_events WHERE substr(started_at,1,7)=?", (month,)
+                "SELECT * FROM usage_events WHERE substr(started_at,1,7)=? AND status!='skipped'",
+                (month,),
             )
         ]
     prefs = registry.preferences()
