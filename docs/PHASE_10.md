@@ -15,8 +15,9 @@ Every call can consume provider quota, including failed calls, and appears in Us
 
 The planning step must return two numbered lines. If it cannot, the workflow stops
 with an error rather than guessing subtasks. Intermediate drafts, reviews and
-subtask findings are sent to the next relevant model but are not stored as chat
-messages. The final answer and a stage trail are stored. Coordinated mode and
+subtask findings are sent to the next relevant model. Since Phase 18, completed
+intermediate results are stored separately from chat messages and can be inspected
+under **Model attempts**. The final answer and a stage trail are stored. Coordinated mode and
 ordered fallback cannot be enabled together. Local-only mode validates both
 selected endpoints before a prompt is sent.
 

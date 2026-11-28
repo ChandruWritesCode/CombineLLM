@@ -132,10 +132,11 @@ def test_schema_seven_preserves_conversations(tmp_path):
     store = Store(path)
     cid = store.create("Keep this")["id"]
     with store.connect() as db:
+        db.execute("DROP TABLE coordination_steps")
         db.execute("ALTER TABLE messages DROP COLUMN selection_mode")
         db.execute("ALTER TABLE messages DROP COLUMN selection_reason")
         db.execute("PRAGMA user_version=6")
     upgraded = Store(path)
     assert upgraded.get(cid)["title"] == "Keep this"
     with upgraded.connect() as db:
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 7
+        assert db.execute("PRAGMA user_version").fetchone()[0] == 8

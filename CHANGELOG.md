@@ -1,5 +1,13 @@
 # Changelog
 
+## Phase 18 — collaboration clarity
+
+- Saved bounded intermediate results for coordinated answers and displayed them
+  with each step's status, token count, and estimated cost in chat.
+- Added schema 8 for local step storage while preserving existing conversations.
+- Kept intermediate results out of the portable JSON transcript; database backups
+  include them because they are private conversation data.
+
 ## Phase 17 — task-aware routing
 
 - Added optional task focus to automatic model choice and the comparison panel.

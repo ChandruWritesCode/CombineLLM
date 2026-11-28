@@ -31,6 +31,7 @@ header h1 { font-size:clamp(1.2rem,2.5vw,1.9rem); }
 .badge { color:#94f5df; background:#173d3d; border:1px solid #377672; border-radius:999px; }
 .fallback-control { background:#17162a; border-bottom:1px solid #343047; line-height:1.5; }
 #task-hint { max-width:260px; background:#141427; color:#f5f0ff; border:1px solid #6e5b83; border-radius:10px; padding:8px 11px; }
+.step-result { white-space:pre-wrap; overflow-wrap:anywhere; max-height:220px; overflow:auto; padding:10px; background:#141427; border:1px solid #514268; border-radius:9px; font:inherit; }
 .coordination-control { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:11px 24px; background:#19172e; border-bottom:1px solid #343047; }
 .coordination-control label { color:#e6dcf8; font-size:.85rem; }
 .coordination-control select { max-width:100%; background:#141427; color:#f5f0ff; border:1px solid #6e5b83; border-radius:10px; padding:9px 11px; }

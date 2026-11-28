@@ -15,7 +15,7 @@ uses `data/combinellm.sqlite3`, or the configured database path.
 
 ## Backups
 
-Backups contain private conversations and encrypted provider credentials. They are ignored by Git; keep them in a
+Backups contain private conversations, coordinated intermediate results, and encrypted provider credentials. They are ignored by Git; keep them in a
 location you control. Use a unique filename for every backup.
 
 For native development, from the project root:

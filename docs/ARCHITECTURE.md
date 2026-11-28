@@ -179,3 +179,13 @@ Matching user labels improve ranking, while a known context limit below the inpu
 size makes a connection ineligible. The automatic saved-chat path recomputes input
 size from completed context plus the new prompt and applies the same comparison
 before selecting its one provider. See [Phase 17](PHASE_17.md).
+
+## Phase 18 collaboration steps
+
+Schema 8 adds `coordination_steps`, keyed by answer ID and step number, with a
+foreign key that removes steps when the answer is deleted. Completed bounded
+intermediate outputs are saved as separate records and returned with saved chat
+messages; the final answer remains the only assistant text used in future model
+context. The existing attempt group supplies per-step status, tokens and cost
+estimates. Portable JSON exports exclude these internal results. See
+[Phase 18](PHASE_18.md).

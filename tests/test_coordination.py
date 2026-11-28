@@ -89,6 +89,20 @@ def wait_for_answer(client, cid):
     raise AssertionError("Coordinated answer did not finish")
 
 
+def test_schema_eight_adds_steps_and_preserves_saved_chat(tmp_path):
+    path = str(tmp_path / "migration.sqlite3")
+    store = Store(path)
+    cid = store.create("Keep this")["id"]
+    with store.connect() as db:
+        db.execute("DROP TABLE coordination_steps")
+        db.execute("PRAGMA user_version=7")
+    upgraded = Store(path)
+    assert upgraded.get(cid)["title"] == "Keep this"
+    with upgraded.connect() as db:
+        assert db.execute("PRAGMA user_version").fetchone()[0] == 8
+        assert db.execute("SELECT COUNT(*) FROM coordination_steps").fetchone()[0] == 0
+
+
 def test_review_tracks_stages_costs_and_rating(monkeypatch):
     with configured_client(monkeypatch) as client:
         cid, ids = setup(client)
@@ -113,6 +127,13 @@ def test_review_tracks_stages_costs_and_rating(monkeypatch):
             "coordination_revision",
         ]
         assert [a["status"] for a in answer["attempts"]] == ["complete"] * 3
+        assert [(step["stage"], step["content"]) for step in answer["steps"]] == [
+            ("draft", "Draft answer"),
+            ("review", "Clarify the conclusion."),
+        ]
+        exported = client.get(f"/api/v1/conversations/{cid}/export").json()
+        assert "steps" not in str(exported)
+        assert "Clarify the conclusion." not in str(exported)
         assert sum(float(a["estimated_cost_usd"]) for a in answer["attempts"]) > 0
         assert [model for model, _ in FakeModel.requests] == ["writer", "critic", "writer"]
         rated = client.put(path + f"/{answer['id']}/rating", json={"rating": 4})
@@ -138,6 +159,11 @@ def test_split_synthesizes_two_bounded_subtasks(monkeypatch):
         assert response.status_code == 202
         answer = wait_for_answer(client, cid)
         assert answer["content"] == "Synthesized answer"
+        assert [(step["step_number"], step["content"]) for step in answer["steps"]] == [
+            (1, "1. Research\n2. Compare"),
+            (2, "Findings from writer"),
+            (3, "Findings from critic"),
+        ]
         assert [a["source"] for a in answer["attempts"]] == [
             "coordination_plan",
             "coordination_subtask_1",
@@ -214,6 +240,7 @@ def test_review_failure_does_not_publish_draft(monkeypatch):
         answer = wait_for_answer(client, cid)
         assert answer["status"] == "failed"
         assert answer["content"] == ""
+        assert [step["stage"] for step in answer["steps"]] == ["draft"]
         assert [a["status"] for a in answer["attempts"]] == ["complete", "failed"]
         assert len(FakeModel.requests) == 2
 
@@ -240,6 +267,7 @@ def test_cancellation_stops_review_and_skips_revision(monkeypatch):
         assert current["coordination_stage"] == "Reviewing draft"
         stopped = client.post(path + f"/{mid}/cancel")
         assert stopped.json()["status"] == "cancelled"
+        assert [step["stage"] for step in stopped.json()["steps"]] == ["draft"]
         assert [a["status"] for a in stopped.json()["attempts"]] == ["complete", "cancelled"]
         assert len(FakeModel.requests) == 2
 
@@ -249,6 +277,7 @@ def test_schema_six_preserves_existing_messages(tmp_path):
     store = Store(path)
     cid = store.create("Existing")["id"]
     with store.connect() as db:
+        db.execute("DROP TABLE coordination_steps")
         db.execute("ALTER TABLE messages DROP COLUMN coordination_mode")
         db.execute("ALTER TABLE messages DROP COLUMN coordination_stage")
         db.execute("ALTER TABLE messages DROP COLUMN rating")
@@ -257,5 +286,5 @@ def test_schema_six_preserves_existing_messages(tmp_path):
         db.execute("PRAGMA user_version=5")
     restored = Store(path)
     with restored.connect() as db:
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 7
+        assert db.execute("PRAGMA user_version").fetchone()[0] == 8
     assert restored.get(cid)["title"] == "Existing"

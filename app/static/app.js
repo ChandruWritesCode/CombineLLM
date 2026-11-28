@@ -229,6 +229,24 @@ function drawMessage(message) {
         ? attempt.source.replace("coordination_", "").replaceAll("_", " ") + " · " : "";
       line.textContent = `${attempt.attempt_number}. ${stage}${attempt.label} (${attempt.model}): ${attempt.status}${attempt.error_code ? " — " + attempt.error_code.replaceAll("_", " ") : ""}`;
       attempts.append(line);
+      if (message.coordination_mode) {
+        const usage = document.createElement("small");
+        const tokens = attempt.total_tokens == null ? "tokens unknown" : `${attempt.total_tokens} tokens`;
+        const price = attempt.estimated_cost_usd == null ? "cost unknown" : `$${Number(attempt.estimated_cost_usd).toFixed(6)} estimated`;
+        usage.textContent = `${tokens} · ${price}`;
+        attempts.append(usage);
+        const step = message.steps?.find(s => s.step_number === attempt.attempt_number);
+        if (step) {
+          const result = document.createElement("pre");
+          result.className = "step-result";
+          result.textContent = step.content;
+          attempts.append(result);
+        } else if (attempt.source?.endsWith("revision") || attempt.source?.endsWith("synthesis")) {
+          const result = document.createElement("small");
+          result.textContent = "Final answer shown above.";
+          attempts.append(result);
+        }
+      }
     }
     const knownCosts = message.attempts.filter(a => a.estimated_cost_usd !== null);
     const unknownCosts = message.attempts.length - knownCosts.length;

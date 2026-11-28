@@ -19,7 +19,7 @@ class ProviderError(Exception):
 
 @dataclass
 class ProviderEvent:
-    kind: Literal["delta", "done", "stage"]
+    kind: Literal["delta", "done", "stage", "intermediate"]
     text: str = ""
     finish_reason: str = ""
     usage: Usage | None = None

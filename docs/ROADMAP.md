@@ -42,7 +42,8 @@ Each phase should leave the application runnable.
     labels stored with each connection, with explicit unknown values.
 17. **Task-aware routing (implemented):** apply those hints during one-call automatic
     selection with a visible explanation and safeguards.
-18. **Collaboration clarity (planned):** show each coordinated step and its usage.
+18. **Collaboration clarity (implemented):** retain bounded intermediate results
+    and show each coordinated step's result, status, tokens, and cost estimate.
 19. **Release readiness (planned):** backup/restore guidance and local diagnostics.
 
 The scope was revised at the user's request: settings and basic usage moved into

@@ -1,7 +1,7 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 17 — task-aware routing.**
+**Current release: Phase 18 — collaboration clarity.**
 
 Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
 Provider availability depends on the service and your account; backend health does
@@ -63,6 +63,9 @@ For automatic choice, you can optionally choose a task focus. The app prefers
 models you tagged for that task and excludes models whose entered context limit
 is below the estimated input size. It still makes one provider call per message;
 see [Phase 17](docs/PHASE_17.md).
+Coordinated answers now retain their intermediate draft, review, planning, or
+subtask results locally. Expand **Model attempts** on the answer to inspect each
+step alongside token counts and estimated costs. See [Phase 18](docs/PHASE_18.md).
 
 ### Import Gemini from the environment
 
@@ -174,6 +177,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Phase 15: conversation portability](docs/PHASE_15.md) — transcript export and import.
 - [Phase 16: model capability hints](docs/PHASE_16.md) — manual context and task labels.
 - [Phase 17: task-aware routing](docs/PHASE_17.md) — one-call choice using your hints.
+- [Phase 18: collaboration clarity](docs/PHASE_18.md) — saved step results and usage.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.

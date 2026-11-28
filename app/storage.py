@@ -24,7 +24,7 @@ class Store:
         with self.connect() as db:
             db.execute("PRAGMA journal_mode=WAL")
             version = db.execute("PRAGMA user_version").fetchone()[0]
-            if version > 7:
+            if version > 8:
                 raise RuntimeError("Database is newer than this application; do not downgrade.")
             if version == 0:
                 db.executescript("""
@@ -111,6 +111,19 @@ class Store:
                     PRAGMA user_version=7;
                     COMMIT;
                 """)
+            if version < 8:
+                db.executescript("""
+                    BEGIN IMMEDIATE;
+                    CREATE TABLE coordination_steps (
+                        message_id TEXT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
+                        step_number INTEGER NOT NULL,
+                        stage TEXT NOT NULL,
+                        content TEXT NOT NULL,
+                        PRIMARY KEY (message_id,step_number)
+                    );
+                    PRAGMA user_version=8;
+                    COMMIT;
+                """)
             db.execute("UPDATE usage_events SET status='interrupted' WHERE status='running'")
             db.execute(
                 "UPDATE messages SET status='interrupted', error=? WHERE status='streaming'",
@@ -164,6 +177,7 @@ class Store:
             ]
             for message in result["messages"]:
                 message["attempts"] = self.attempts(db, message.get("attempt_group_id"))
+                message["steps"] = self.steps(db, message["id"])
             return result
 
     @staticmethod
@@ -395,6 +409,26 @@ class Store:
                 (stage, message_id),
             )
 
+    def save_step(self, message_id, number, stage, content):
+        with self.connect() as db:
+            db.execute(
+                "INSERT INTO coordination_steps (message_id,step_number,stage,content) "
+                "SELECT id,?,?,? FROM messages WHERE id=? AND status='streaming' "
+                "AND coordination_mode IS NOT NULL",
+                (number, stage, content, message_id),
+            )
+
+    @staticmethod
+    def steps(db, message_id):
+        return [
+            dict(row)
+            for row in db.execute(
+                "SELECT step_number,stage,content FROM coordination_steps "
+                "WHERE message_id=? ORDER BY step_number",
+                (message_id,),
+            )
+        ]
+
     def rate_answer(self, conversation_id, message_id, rating):
         with self.connect() as db:
             cursor = db.execute(
@@ -416,4 +450,5 @@ class Store:
                 raise HTTPException(404, "Message not found")
             result = self.decode(row)
             result["attempts"] = self.attempts(db, result.get("attempt_group_id"))
+            result["steps"] = self.steps(db, result["id"])
             return result

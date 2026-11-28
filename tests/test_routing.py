@@ -229,6 +229,7 @@ def test_v3_migration_preserves_legacy_usage(tmp_path):
             "selection_reason",
         ]:
             db.execute(f"ALTER TABLE messages DROP COLUMN {column}")
+        db.execute("DROP TABLE coordination_steps")
         db.execute("ALTER TABLE usage_events DROP COLUMN usage_group")
         db.execute("PRAGMA user_version=3")
     store = Store(path)
@@ -236,4 +237,4 @@ def test_v3_migration_preserves_legacy_usage(tmp_path):
         row = db.execute("SELECT * FROM usage_events").fetchone()
         assert row["estimated_cost_usd"] == "0.1"
         assert row["attempt_group_id"] is None
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 7
+        assert db.execute("PRAGMA user_version").fetchone()[0] == 8

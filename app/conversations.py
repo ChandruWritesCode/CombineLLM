@@ -67,6 +67,13 @@ class Generations:
                     self.store.attribute_answer(message_id, provider)
                     if event.kind == "stage":
                         self.store.save_stage(message_id, event.text)
+                    elif event.kind == "intermediate":
+                        self.store.save_step(
+                            message_id,
+                            getattr(provider.current, "attempt_number", 0),
+                            event.finish_reason,
+                            event.text,
+                        )
                     elif event.kind == "delta":
                         content += event.text
                         self.store.save_answer(message_id, content, "streaming")

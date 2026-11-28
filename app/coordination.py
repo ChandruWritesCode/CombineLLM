@@ -97,6 +97,7 @@ class CoordinatedProvider:
         self.current = self.providers[index]
         yield ProviderEvent("stage", text=label)
         result = await self._collect(self.current, prompt)
+        yield ProviderEvent("intermediate", text=result, finish_reason=self.stages[index])
         yield result
 
     async def _final(self, index, label, prompt):

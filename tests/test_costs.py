@@ -125,6 +125,7 @@ def test_v2_migration_does_not_backfill_costs(tmp_path):
             "selection_reason",
         ]:
             db.execute(f"ALTER TABLE messages DROP COLUMN {column}")
+        db.execute("DROP TABLE coordination_steps")
         db.execute("ALTER TABLE usage_events DROP COLUMN usage_group")
         db.execute("PRAGMA user_version=2")
     store = Store(path)
@@ -132,7 +133,7 @@ def test_v2_migration_does_not_backfill_costs(tmp_path):
         row = db.execute("SELECT * FROM usage_events").fetchone()
         assert row["total_tokens"] == 100
         assert row["estimated_cost_usd"] is None
-        assert db.execute("PRAGMA user_version").fetchone()[0] == 7
+        assert db.execute("PRAGMA user_version").fetchone()[0] == 8
 
 
 def test_selected_models_history_costs_and_advisory_budget(monkeypatch):
