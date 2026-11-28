@@ -22,7 +22,16 @@ async def get_provider(request: Request) -> ChatProvider:
         conversation_id and isinstance(body, dict) and body.get("auto_select") is True
     )
     if auto_selected:
-        comparison = compare_models(request.app, local_only=body.get("local_only") is True)
+        content = body.get("content")
+        if not isinstance(content, str):
+            raise HTTPException(422, "Message content must be text.")
+        input_chars = request.app.state.store.context_chars(conversation_id, content)
+        comparison = compare_models(
+            request.app,
+            local_only=body.get("local_only") is True,
+            task_hint=body.get("task_hint"),
+            input_chars=input_chars,
+        )
         model_id = comparison["suggested_model_id"]
         if not model_id:
             raise HTTPException(422, "No eligible model is available for automatic selection.")
@@ -38,8 +47,10 @@ async def get_provider(request: Request) -> ChatProvider:
     )
     if auto_selected:
         provider.selection_mode = "automatic"
+        task = body.get("task_hint")
         provider.selection_reason = (
-            "Chosen from local prices, recent outcomes, budgets and cooldowns. "
+            f"Chosen for {task or 'general use'} using user-entered task/context hints, "
+            "local prices, recent outcomes, budgets and cooldowns. "
             "Provider quota and live availability were not checked."
         )
     return provider

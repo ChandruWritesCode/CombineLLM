@@ -41,6 +41,7 @@ class Turn(BaseModel):
     local_only: bool = False
     coordination: Coordination | None = None
     auto_select: bool = False
+    task_hint: Literal["general", "code", "writing", "analysis"] | None = None
 
 
 class Rating(BaseModel):

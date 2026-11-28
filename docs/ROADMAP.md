@@ -40,7 +40,7 @@ Each phase should leave the application runnable.
     and import, readable text export, and explicit credential/usage boundaries.
 16. **Model capability hints (implemented):** manual context-size and task-strength
     labels stored with each connection, with explicit unknown values.
-17. **Task-aware routing (planned):** apply those hints during one-call automatic
+17. **Task-aware routing (implemented):** apply those hints during one-call automatic
     selection with a visible explanation and safeguards.
 18. **Collaboration clarity (planned):** show each coordinated step and its usage.
 19. **Release readiness (planned):** backup/restore guidance and local diagnostics.

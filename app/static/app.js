@@ -55,7 +55,12 @@ async function refreshBudgets() {
 let recommendationRefresh = 0;
 async function loadRecommendations() {
   const version = ++recommendationRefresh;
-  const data = await api(`/recommendations?local_only=${$("local-only").checked}`);
+  const params = new URLSearchParams({
+    local_only: String($("local-only").checked),
+    input_chars: String(Math.min(100000, $("prompt").value.length)),
+  });
+  if ($("task-hint").value) params.set("task_hint", $("task-hint").value);
+  const data = await api(`/recommendations?${params}`);
   if (version !== recommendationRefresh) return;
   autoReady = !!data.suggested_model_id;
   autoSuggestionId = data.suggested_model_id || "";
@@ -102,6 +107,7 @@ function controls() {
   );
   $("chat-model").disabled = sending || !!activeMessage || automatic;
   $("auto-select").disabled = sending || !!activeMessage;
+  $("task-hint").disabled = sending || !!activeMessage || !automatic;
   $("auto-description").textContent = automatic
     ? autoReady ? `Current suggestion: ${autoSuggestionName}. The app checks again when you send and makes one provider request.`
       : "No eligible model is available. Check model settings, cooldowns, or local-only mode."
@@ -410,7 +416,8 @@ $("composer").onsubmit = async (event) => {
     await api(`/conversations/${id}/messages`, {
       method: "POST",
       body: JSON.stringify({ content, model_id: $("auto-select").checked ? null : $("chat-model").value,
-        auto_select: $("auto-select").checked, fallback: $("use-fallback").checked, local_only: $("local-only").checked,
+        auto_select: $("auto-select").checked, task_hint: $("auto-select").checked ? $("task-hint").value || null : null,
+        fallback: $("use-fallback").checked, local_only: $("local-only").checked,
         coordination: $("coordination-mode").value ? {mode: $("coordination-mode").value, collaborator_model_id: $("collaborator-model").value} : null }),
     });
     $("auto-select").checked = false;
@@ -560,6 +567,12 @@ $("model-guide").ontoggle = () => {
 };
 $("refresh-recommendations").onclick = () => loadRecommendations().catch((e) => notice(e.message));
 $("local-only").onchange = () => {
+  if ($("auto-select").checked) { autoReady = false; autoSuggestionId = ""; }
+  controls();
+  if ($("model-guide").open || $("auto-select").checked)
+    loadRecommendations().catch((e) => notice(e.message));
+};
+$("task-hint").onchange = () => {
   if ($("auto-select").checked) { autoReady = false; autoSuggestionId = ""; }
   controls();
   if ($("model-guide").open || $("auto-select").checked)

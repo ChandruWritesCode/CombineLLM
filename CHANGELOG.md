@@ -1,5 +1,13 @@
 # Changelog
 
+## Phase 17 — task-aware routing
+
+- Added optional task focus to automatic model choice and the comparison panel.
+- Preferred matching user-entered task labels and excluded known insufficient
+  context limits while keeping budget, cooldown and request-ceiling safeguards.
+- Rechecked full saved conversation context when sending; retained one provider
+  call and recorded the selection explanation on the answer.
+
 ## Phase 16 — model capability hints
 
 - Added manually entered context limits and task-strength labels to model settings.

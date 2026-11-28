@@ -243,6 +243,23 @@ class Store:
                 )
         return self.get(conversation_id)
 
+    def context_chars(self, conversation_id, content):
+        with self.connect() as db:
+            rows = db.execute(
+                "SELECT role,content,status FROM messages WHERE conversation_id=? ORDER BY seq",
+                (conversation_id,),
+            ).fetchall()
+        total = len(content)
+        for previous, answer in zip(rows, rows[1:]):
+            if (
+                previous["role"] == "user"
+                and answer["role"] == "assistant"
+                and answer["status"] == "complete"
+                and answer["content"].strip()
+            ):
+                total += len(previous["content"]) + len(answer["content"])
+        return total
+
     def begin(self, conversation_id, content, max_output_tokens, provider):
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")

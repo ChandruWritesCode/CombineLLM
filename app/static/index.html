@@ -8,8 +8,8 @@
     <script src="/static/theme.js?v=11"></script>
     <link rel="stylesheet" href="/static/styles.css" />
     <link rel="stylesheet" href="/static/settings.css" />
-    <script defer src="/static/app.js?v=15"></script>
-    <link rel="stylesheet" href="/static/refresh.css?v=15b" />
+    <script defer src="/static/app.js?v=17"></script>
+    <link rel="stylesheet" href="/static/refresh.css?v=17" />
     <link rel="stylesheet" href="/static/themes.css?v=12" />
     <script defer src="/static/ui.js"></script>
   </head>
@@ -60,6 +60,7 @@
       </div>
       <div class="fallback-control">
         <label><input id="auto-select" type="checkbox" /> Choose a model automatically for my next message</label>
+        <label for="task-hint">Task focus for automatic choice</label><select id="task-hint"><option value="">No preference</option><option value="general">General</option><option value="code">Code</option><option value="writing">Writing</option><option value="analysis">Analysis</option></select>
         <small id="auto-description">Uses local comparison at send time, then makes one provider request. You can review the current suggestion below.</small>
         <label><input id="use-fallback" type="checkbox" /> Enable configured fallback for this chat session</label>
         <label><input id="local-only" type="checkbox" /> Local endpoints only for this session</label>

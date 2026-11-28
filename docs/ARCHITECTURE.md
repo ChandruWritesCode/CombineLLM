@@ -171,3 +171,11 @@ behind. Readable text export uses the same validated snapshot. See
 Connections may store a user-entered character limit and task-strength tags in
 their existing JSON configuration. No schema migration or provider discovery is
 involved. Blank context limits remain unknown. See [Phase 16](PHASE_16.md).
+
+## Phase 17 task-aware routing
+
+The comparison endpoint accepts an optional task label and estimated input size.
+Matching user labels improve ranking, while a known context limit below the input
+size makes a connection ineligible. The automatic saved-chat path recomputes input
+size from completed context plus the new prompt and applies the same comparison
+before selecting its one provider. See [Phase 17](PHASE_17.md).
