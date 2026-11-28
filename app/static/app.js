@@ -9,6 +9,33 @@ let viewVersion = 0;
 let modelConnections = [],
   workspacePreferences = {};
 let autoReady = false, autoSuggestionName = "", autoSuggestionId = "";
+let profileReady = false, profilePreviewVersion = 0;
+async function refreshProfilePreview() {
+  const version = ++profilePreviewVersion;
+  const name = $("routing-profile").value;
+  if (!$("auto-select").checked || !name) {
+    profileReady = false;
+    $("profile-preview").textContent = name ? "Enable automatic choice to use this profile." : "Standard automatic choice makes one provider call.";
+    controls();
+    return;
+  }
+  $("profile-preview").textContent = "Checking the plan…";
+  profileReady = false;
+  controls();
+  const params = new URLSearchParams({profile: name, local_only: String($("local-only").checked), input_chars: String(Math.min(50000, $("prompt").value.length))});
+  if (selected) params.set("conversation_id", selected);
+  if ($("task-hint").value) params.set("task_hint", $("task-hint").value);
+  try {
+    const plan = await api(`/routing/preview?${params}`);
+    if (version !== profilePreviewVersion) return;
+    profileReady = true;
+    $("profile-preview").textContent = `${plan.primary_name}${plan.collaborator_name ? ` + ${plan.collaborator_name}` : ""} · ${plan.calls} call${plan.calls === 1 ? "" : "s"} · ${plan.estimated_cost_usd == null ? "cost unknown" : `$${Number(plan.estimated_cost_usd).toFixed(6)} estimated`}${plan.max_estimated_cost_usd == null ? "" : ` · $${plan.max_estimated_cost_usd} limit`}. Estimate and quota signals are advisory.`;
+  } catch (error) {
+    if (version !== profilePreviewVersion) return;
+    $("profile-preview").textContent = `Profile unavailable: ${error.message}`;
+  }
+  controls();
+}
 
 function notice(text = "") {
   $("notice").textContent = text;
@@ -102,14 +129,15 @@ async function loadRecommendations() {
 }
 function controls() {
   const automatic = $("auto-select").checked;
-  providerReady = automatic ? autoReady : !!modelConnections.find(
+  providerReady = automatic ? ($("routing-profile").value ? profileReady : autoReady) : !!modelConnections.find(
     (m) => m.id === $("chat-model").value && m.enabled,
   );
   $("chat-model").disabled = sending || !!activeMessage || automatic;
   $("auto-select").disabled = sending || !!activeMessage;
   $("task-hint").disabled = sending || !!activeMessage || !automatic;
+  $("routing-profile").disabled = sending || !!activeMessage || !automatic;
   $("auto-description").textContent = automatic
-    ? autoReady ? `Current suggestion: ${autoSuggestionName}. The app checks again when you send and makes one provider request.`
+    ? $("routing-profile").value ? "The saved profile plans eligible models when you send. Review the preview below." : autoReady ? `Current suggestion: ${autoSuggestionName}. The app checks again when you send and makes one provider request.`
       : "No eligible model is available. Check model settings, cooldowns, or local-only mode."
     : "Uses local comparison at send time, then makes one provider request. You can review the current suggestion below.";
   $("local-only").disabled = sending || !!activeMessage;
@@ -123,9 +151,11 @@ function controls() {
   );
   const fallbackIds = workspacePreferences.fallback_model_ids || [];
   $("use-fallback").disabled = sending || !!activeMessage || !fallbackIds.length || coordinating || automatic;
-  $("provider-state").textContent = automatic ? "Automatic choice for one message" : coordinating
+  $("provider-state").textContent = automatic ? ($("routing-profile").value || "Automatic choice for one message") : coordinating
     ? ($("coordination-mode").value === "review" ? "Draft + review" : "Split + synthesize")
     : $("use-fallback").checked ? "Ordered fallback enabled" : "Manual selection";
+  const chosen = modelConnections.find(m => m.id === $("chat-model").value)?.name || "Choose a model";
+  $("routing-summary").textContent = automatic ? `Automatic · ${$("provider-state").textContent}` : `${chosen} · ${$("provider-state").textContent}`;
   $("fallback-description").textContent = fallbackIds.length
     ? `After the selected model: ${fallbackIds.map(id => modelConnections.find(m => m.id === id)?.name || "Unavailable model").join(" → ")}. Enabling this can send history to each provider and use credits. No fallback after partial text.`
     : "Manual selection only. Configure an optional fallback order in Settings.";
@@ -435,6 +465,7 @@ $("composer").onsubmit = async (event) => {
       method: "POST",
       body: JSON.stringify({ content, model_id: $("auto-select").checked ? null : $("chat-model").value,
         auto_select: $("auto-select").checked, task_hint: $("auto-select").checked ? $("task-hint").value || null : null,
+        routing_profile: $("auto-select").checked ? $("routing-profile").value || null : null,
         fallback: $("use-fallback").checked, local_only: $("local-only").checked,
         coordination: $("coordination-mode").value ? {mode: $("coordination-mode").value, collaborator_model_id: $("collaborator-model").value} : null }),
     });
@@ -552,6 +583,9 @@ async function init() {
     for (const model of modelConnections.filter(m => m.enabled))
       $("collaborator-model").append(new Option(`${model.name} · ${model.model}`, model.id));
     $("chat-model").value = workspacePreferences.default_model_id || "";
+    $("routing-profile").replaceChildren(new Option("Standard automatic choice · 1 call", ""));
+    for (const profile of workspacePreferences.routing_profiles || [])
+      $("routing-profile").append(new Option(`${profile.name} · ${profile.mode}`, profile.name));
     if (!modelConnections.some((m) => m.enabled))
       notice("Add an enabled model in Settings to start chatting.");
     await listChats();
@@ -570,6 +604,8 @@ async function init() {
   refreshBudgets();
 }
 $("use-fallback").onchange = controls;
+$("routing-panel").open = localStorage.getItem("combinellm-routing-open") === "true";
+$("routing-panel").ontoggle = () => localStorage.setItem("combinellm-routing-open", String($("routing-panel").open));
 $("auto-select").onchange = () => {
   if ($("auto-select").checked) {
     $("use-fallback").checked = false;
@@ -578,8 +614,10 @@ $("auto-select").onchange = () => {
     autoSuggestionId = "";
     loadRecommendations().catch((e) => notice(e.message));
   }
+  refreshProfilePreview();
   controls();
 };
+$("routing-profile").onchange = refreshProfilePreview;
 $("model-guide").ontoggle = () => {
   if ($("model-guide").open) loadRecommendations().catch((e) => notice(e.message));
 };
@@ -587,12 +625,14 @@ $("refresh-recommendations").onclick = () => loadRecommendations().catch((e) => 
 $("local-only").onchange = () => {
   if ($("auto-select").checked) { autoReady = false; autoSuggestionId = ""; }
   controls();
+  refreshProfilePreview();
   if ($("model-guide").open || $("auto-select").checked)
     loadRecommendations().catch((e) => notice(e.message));
 };
 $("task-hint").onchange = () => {
   if ($("auto-select").checked) { autoReady = false; autoSuggestionId = ""; }
   controls();
+  refreshProfilePreview();
   if ($("model-guide").open || $("auto-select").checked)
     loadRecommendations().catch((e) => notice(e.message));
 };
@@ -608,4 +648,10 @@ $("chat-model").onchange = () => {
     "The selected model will receive the completed conversation history on your next message.",
   );
 };
+let previewTimer;
+$("prompt").addEventListener("input", () => {
+  if (!$("routing-profile").value || !$("auto-select").checked) return;
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(refreshProfilePreview, 300);
+});
 init();

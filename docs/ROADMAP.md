@@ -46,6 +46,9 @@ Each phase should leave the application runnable.
     and show each coordinated step's result, status, tokens, and cost estimate.
 19. **Release readiness (implemented):** local diagnostics, backup verification,
     non-overwriting restore tooling, and clearer setup/recovery guidance.
+20. **Compact routing and profiles (implemented):** foldable chat controls,
+    advisory provider quota signals, saved routing profiles with call and
+    estimated-cost limits, and bounded one-model/review/split plans.
 
 The scope was revised at the user's request: settings and basic usage moved into
 Phase 4; ordered fallback and coordination are opt-in. Website subscriptions do

@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/static/styles.css" />
     <link rel="stylesheet" href="/static/settings.css" />
     <script defer src="/static/common.js"></script>
-    <script defer src="/static/settings.js?v=19b"></script>
+    <script defer src="/static/settings.js?v=20"></script>
     <link rel="stylesheet" href="/static/refresh.css?v=10" />
     <link rel="stylesheet" href="/static/themes.css?v=11" />
     <script defer src="/static/ui.js"></script>
@@ -108,6 +108,20 @@
             <div class="full">
               <button class="primary" type="submit">Save defaults</button>
             </div>
+          </form>
+        </section>
+        <section class="panel" aria-labelledby="profiles-title">
+          <h2 id="profiles-title">Routing profiles</h2>
+          <p>Save up to eight ways to choose models automatically. Review uses three calls; split and synthesize uses four. Each call may consume provider quota.</p>
+          <div id="profile-list" class="model-list"></div>
+          <form id="profile-form" class="form-grid">
+            <label>Profile name<input id="profile-name" maxlength="40" required placeholder="Balanced research" /></label>
+            <label>Workflow<select id="profile-mode"><option value="single">One model · 1 call</option><option value="review">Draft, review, revise · 3 calls</option><option value="split">Plan, work, synthesize · 4 calls</option></select></label>
+            <label>Choose by<select id="profile-priority"><option value="balanced">Balanced</option><option value="lowest_cost">Lowest entered price</option><option value="reliable">Recent completion rate</option></select></label>
+            <label>Maximum calls<input id="profile-calls" type="number" min="1" max="4" value="1" required /></label>
+            <label>Maximum estimated cost (USD)<input id="profile-cost" type="number" min="0" max="1000000" step="0.00000001" placeholder="No estimate limit" /></label>
+            <p class="full">A cost limit checks an estimate before sending. It requires entered prices for every planned model and cannot guarantee the provider's final bill.</p>
+            <div class="full"><button class="primary" type="submit" id="profile-save">Add profile</button><button class="quiet" type="button" id="profile-cancel" hidden>Cancel edit</button></div>
           </form>
         </section>
         <section class="panel" aria-labelledby="local-status-title">

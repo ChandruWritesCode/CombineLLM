@@ -10,6 +10,7 @@ import httpx
 from app.config import Settings
 from app.policies import retry_delay
 from app.providers.base import ProviderError, ProviderEvent
+from app.quota import parse_headers
 from app.schemas import ChatRequest, Usage
 
 
@@ -21,6 +22,7 @@ class GeminiProvider:
         self._key = settings.gemini_api_key.get_secret_value().strip()
         self._timeout = settings.provider_timeout_seconds
         self._transport = transport
+        self.last_quota = None
 
     async def stream(self, request: ChatRequest) -> AsyncIterator[ProviderEvent]:
         if not self._key or not self.model:
@@ -57,6 +59,7 @@ class GeminiProvider:
                 async with client.stream(
                     "POST", url, headers={"x-goog-api-key": self._key}, json=body
                 ) as response:
+                    self.last_quota = parse_headers(response.headers)
                     self._check_status(response.status_code, response.headers.get("retry-after"))
                     usage = Usage()
                     finish = ""

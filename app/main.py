@@ -18,7 +18,9 @@ from app.conversations import router as conversations_router
 from app.diagnostics import router as diagnostics_router
 from app.model_api import router as model_router
 from app.oauth import router as oauth_router
+from app.profiles import router as profiles_router
 from app.providers.base import ProviderError
+from app.quota import router as quota_router
 from app.recommendations import router as recommendations_router
 from app.storage import Store
 
@@ -48,8 +50,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     application = FastAPI(
         title=settings.app_name,
-        version="0.19.0",
-        description="Self-hosted LLM backend. Phase 19: release readiness.",
+        version="0.20.0",
+        description="Self-hosted LLM backend. Phase 20: routing profiles and quota signals.",
         lifespan=lifespan,
     )
     application.state.settings = settings
@@ -58,6 +60,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(model_router)
     application.include_router(recommendations_router)
     application.include_router(diagnostics_router)
+    application.include_router(quota_router)
+    application.include_router(profiles_router)
     application.include_router(oauth_router)
     static = Path(__file__).parent / "static"
     application.mount("/static", StaticFiles(directory=static), name="static")

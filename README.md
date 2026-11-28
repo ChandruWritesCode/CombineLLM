@@ -1,7 +1,7 @@
 # CombineLLM
 
 A local, self-hosted chat workspace that will bring multiple LLM providers together.
-**Current release: Phase 19 — release readiness.**
+**Current release: Phase 20 — compact chat controls and routing profiles.**
 
 Connect Gemini, OpenAI, Anthropic, OpenRouter, Ollama, or compatible text APIs.
 Provider availability depends on the service and your account; backend health does
@@ -70,6 +70,13 @@ Open **Settings → Local status** to check storage health, saved conversations,
 model connections, and the credential-key file without contacting providers.
 Backups can be verified and restored to a new path with the local restore command.
 See [Phase 19](docs/PHASE_19.md) and [Operations](docs/OPERATIONS.md).
+The chat's **Model & routing** section folds down to a single row so conversation
+messages have more room. In Settings, save routing profiles for one-model,
+draft/review/revise, or split/synthesize responses. Enable automatic choice in
+chat, select a profile, and inspect its read-only preview before sending.
+Optional limits check a price-based estimate before sending; actual provider
+charges can differ. Usage now shows sanitized quota signals from past provider
+responses, when supplied. See [Phase 20](docs/PHASE_20.md).
 
 ### Import Gemini from the environment
 
@@ -183,6 +190,7 @@ listed in `compose.yaml`. `uv.lock` fixes Python dependencies for both run modes
 - [Phase 17: task-aware routing](docs/PHASE_17.md) — one-call choice using your hints.
 - [Phase 18: collaboration clarity](docs/PHASE_18.md) — saved step results and usage.
 - [Phase 19: release readiness](docs/PHASE_19.md) — diagnostics and safe restore.
+- [Phase 20: compact routing and profiles](docs/PHASE_20.md) — foldable controls, quota signals, bounded plans.
 - [Architecture](docs/ARCHITECTURE.md) — storage, migrations, generation lifecycle.
 - [Operations and troubleshooting](docs/OPERATIONS.md) — backups, recovery, provider outages.
 - [Contributing and Git workflow](docs/CONTRIBUTING.md) — phase commits and validation.
@@ -205,6 +213,8 @@ app/portability.py      Versioned text-only conversation archive contract
 app/routing.py          Bounded opt-in ordered fallback
 app/coordination.py     Bounded draft/review and split/synthesis workflows
 app/recommendations.py  Read-only model comparisons from local data
+app/profiles.py         Saved routing-profile preflight and read-only preview
+app/quota.py            Sanitized provider quota observations
 app/oauth.py            OpenRouter PKCE account connection
 app/providers/          Gemini, Anthropic and compatible text adapters
 app/static/             HTML, CSS, and JavaScript frontend

@@ -20,6 +20,7 @@ from app.policies import cool_down, remaining
 from app.providers.base import ProviderError
 from app.providers.compatible import APIProvider
 from app.providers.gemini import GeminiProvider
+from app.quota import save as save_quota
 from app.schemas import ChatRequest, Message
 from app.storage import now
 
@@ -119,6 +120,7 @@ class TrackedProvider:
                 cool_down(self.store, self.pool, exc.retry_after)
             raise
         finally:
+            save_quota(self.store, self.model_id, getattr(self.provider, "last_quota", None))
             with self.store.connect() as db:
                 db.execute(
                     """UPDATE usage_events SET status=?,duration_ms=?,input_tokens=?,

@@ -4,10 +4,12 @@ from contextlib import aclosing
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
+from app.coordination import build_coordinated_provider
+from app.profiles import prepare_profile
 from app.providers.base import ChatProvider, ProviderError
 from app.recommendations import compare_models
 from app.routing import select_provider
-from app.schemas import ChatRequest, ChatResponse, ProviderStatus, Usage
+from app.schemas import ChatRequest, ChatResponse, Coordination, ProviderStatus, Usage
 
 router = APIRouter(prefix="/api/v1", tags=["chat"])
 
@@ -21,18 +23,33 @@ async def get_provider(request: Request) -> ChatProvider:
     auto_selected = bool(
         conversation_id and isinstance(body, dict) and body.get("auto_select") is True
     )
+    plan = None
     if auto_selected:
         content = body.get("content")
         if not isinstance(content, str):
             raise HTTPException(422, "Message content must be text.")
-        input_chars = request.app.state.store.context_chars(conversation_id, content)
-        comparison = compare_models(
-            request.app,
-            local_only=body.get("local_only") is True,
-            task_hint=body.get("task_hint"),
-            input_chars=input_chars,
-        )
-        model_id = comparison["suggested_model_id"]
+        profile_name = body.get("routing_profile")
+        if profile_name is not None and not isinstance(profile_name, str):
+            raise HTTPException(422, "Routing profile must be a name")
+        if profile_name:
+            plan = prepare_profile(
+                request.app,
+                profile_name,
+                conversation_id,
+                content,
+                task_hint=body.get("task_hint"),
+                local_only=body.get("local_only") is True,
+            )
+            model_id = plan["primary_model_id"]
+        else:
+            input_chars = request.app.state.store.context_chars(conversation_id, content)
+            comparison = compare_models(
+                request.app,
+                local_only=body.get("local_only") is True,
+                task_hint=body.get("task_hint"),
+                input_chars=input_chars,
+            )
+            model_id = comparison["suggested_model_id"]
         if not model_id:
             raise HTTPException(422, "No eligible model is available for automatic selection.")
     provider = select_provider(
@@ -45,13 +62,27 @@ async def get_provider(request: Request) -> ChatProvider:
         and not auto_selected,
         local_only=isinstance(body, dict) and body.get("local_only") is True,
     )
+    if plan and plan["mode"] != "single":
+        provider = build_coordinated_provider(
+            request.app,
+            provider,
+            Coordination(
+                mode=plan["mode"],
+                collaborator_model_id=plan["collaborator_model_id"],
+            ),
+            local_only=body.get("local_only") is True,
+        )
     if auto_selected:
         provider.selection_mode = "automatic"
         task = body.get("task_hint")
         provider.selection_reason = (
-            f"Chosen for {task or 'general use'} using user-entered task/context hints, "
+            f"Profile {plan['profile']} selected {plan['calls']} calls "
+            f"for {task or 'general use'}; "
+            "provider quotas are advisory and cost is estimated."
+            if plan
+            else f"Chosen for {task or 'general use'} using user-entered task/context hints, "
             "local prices, recent outcomes, budgets and cooldowns. "
-            "Provider quota and live availability were not checked."
+            "Provider quota signals are historical; live availability was not checked."
         )
     return provider
 

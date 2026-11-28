@@ -1,5 +1,15 @@
 # Changelog
 
+## Phase 20 — compact routing and profiles
+
+- Folded chat model and routing controls into a compact section that remembers
+  its open state in the browser.
+- Added up to eight saved routing profiles with explicit one, three, or four-call
+  workflows, routing priority, and optional estimated-cost preflight limits.
+- Added a read-only chat preview and recorded automatic profile selection on answers.
+- Displayed sanitized last-seen provider quota headers in Usage and flagged recent
+  reported request exhaustion in model comparison. Signals remain advisory.
+
 ## Phase 19 — release readiness
 
 - Added a local Settings status panel and a read-only diagnostics endpoint.

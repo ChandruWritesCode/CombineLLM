@@ -10,8 +10,8 @@ async function refresh() {
   for (const id of ["start", "end"])
     if ($(id).value) params.set(id, $(id).value);
   if ($("filter-model").value) params.set("model_id", $("filter-model").value);
-  const [data, budgets, quality, limits] = await Promise.all([
-    api(`/usage?${params}`), api("/budgets"), api("/quality"), api("/limits"),
+  const [data, budgets, quality, limits, quota] = await Promise.all([
+    api(`/usage?${params}`), api("/budgets"), api("/quality"), api("/limits"), api("/quota"),
   ]);
   if (version !== refreshVersion) return;
   $("export").href = `/api/v1/usage/export?${params}`;
@@ -43,6 +43,23 @@ async function refresh() {
   for (const item of [{name:"Workspace", ...limits.workspace}, ...limits.models.filter(m => m.limit !== null)]) {
     $("request-limits").append(node("p", `${item.name}: ${item.count} attempted / ${item.limit === null ? "no ceiling" : item.limit + " allowed"}${item.reached ? " · ceiling reached" : ""}`));
   }
+  $("quota-signals").replaceChildren();
+  for (const item of quota.models) {
+    const signal = item.signal;
+    if (!signal) {
+      $("quota-signals").append(node("p", `${item.name}: no provider quota headers observed yet.`));
+      continue;
+    }
+    const age = Date.now() - Date.parse(signal.observed_at);
+    const old = !Number.isFinite(age) || age > 24 * 60 * 60 * 1000;
+    const requests = signal.remaining_requests == null ? "requests unknown" : `${signal.remaining_requests} requests reported remaining`;
+    const tokens = signal.remaining_tokens == null ? "tokens unknown" : `${signal.remaining_tokens} tokens reported remaining`;
+    const reset = signal.requests_reset_at && Date.parse(signal.requests_reset_at) > Date.now()
+      ? ` · request reset around ${new Date(signal.requests_reset_at).toLocaleString()}` : "";
+    const warning = !old && (signal.remaining_requests === 0 || signal.remaining_tokens === 0) ? " · limit warning" : "";
+    $("quota-signals").append(node("p", `${item.name}: ${requests} · ${tokens}${reset}${warning} · observed ${new Date(signal.observed_at).toLocaleString()}${old ? " (old observation)" : ""}.`));
+  }
+  if (!quota.models.length) $("quota-signals").append(node("p", "Add a model connection to see provider signals."));
   $("quality").replaceChildren();
   for (const group of quality.groups) {
     const card = node("div", null, "stat");

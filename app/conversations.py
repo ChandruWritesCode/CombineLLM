@@ -42,6 +42,7 @@ class Turn(BaseModel):
     coordination: Coordination | None = None
     auto_select: bool = False
     task_hint: Literal["general", "code", "writing", "analysis"] | None = None
+    routing_profile: str | None = Field(default=None, min_length=1, max_length=40)
 
 
 class Rating(BaseModel):
@@ -188,6 +189,10 @@ async def send(
             422,
             "Automatic selection cannot combine with a model choice, fallback, or coordination.",
         )
+    if body.routing_profile and not body.auto_select:
+        raise HTTPException(422, "Enable automatic choice to use a routing profile")
+    if body.routing_profile and body.max_output_tokens is not None:
+        raise HTTPException(422, "Routing profiles use each model's configured output limit")
     if body.coordination:
         if body.fallback:
             raise HTTPException(422, "Choose either coordination or ordered fallback.")

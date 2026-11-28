@@ -6,6 +6,7 @@ import httpx
 
 from app.providers.base import ProviderError, ProviderEvent
 from app.providers.gemini import GeminiProvider
+from app.quota import parse_headers
 from app.schemas import Usage
 
 
@@ -20,6 +21,7 @@ class APIProvider:
         self.max_output_tokens = config["max_output_tokens"]
         self.system_prompt = config["system_prompt"]
         self.transport = transport
+        self.last_quota = None
 
     async def stream(self, request):
         if not self.key and self.name not in {"ollama", "compatible"}:
@@ -56,6 +58,7 @@ class APIProvider:
                 timeout=timeout, transport=self.transport, follow_redirects=False
             ) as client:
                 async with client.stream("POST", url, json=body, headers=headers) as response:
+                    self.last_quota = parse_headers(response.headers)
                     GeminiProvider._check_status(
                         response.status_code, response.headers.get("retry-after")
                     )

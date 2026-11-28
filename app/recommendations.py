@@ -1,5 +1,6 @@
 """Read-only model suggestions from local observations and user-entered rates."""
 
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from math import ceil
 from typing import Literal
@@ -9,6 +10,7 @@ from fastapi import APIRouter, Query, Request
 from app.costs import current_budgets
 from app.limits import current_limits
 from app.policies import is_local, remaining
+from app.quota import observed as observed_quota
 
 router = APIRouter(prefix="/api/v1", tags=["recommendations"])
 
@@ -34,13 +36,14 @@ def _price(config):
     return (Decimal(str(input_rate)) + Decimal(str(output_rate))) / Decimal(1000)
 
 
-def compare_models(app, local_only=False, task_hint=None, input_chars=0):
+def compare_models(app, local_only=False, task_hint=None, input_chars=0, priority="balanced"):
     registry = app.state.connections
     workspace_prompt = registry.preferences().system_prompt
     budgets = current_budgets(registry)
     budget_by_id = {item["model_id"]: item for item in budgets["models"]}
     limits = current_limits(registry)
     limit_by_id = {item["model_id"]: item for item in limits["models"]}
+    quota_by_id = {item["model_id"]: item["signal"] for item in observed_quota(registry)}
     items = []
     for config in registry.list():
         model_id = config["id"]
@@ -57,6 +60,15 @@ def compare_models(app, local_only=False, task_hint=None, input_chars=0):
         context_limit = config.get("context_limit_chars")
         required_chars = input_chars + len(config.get("system_prompt") or workspace_prompt)
         context_too_small = context_limit is not None and required_chars > context_limit
+        quota = quota_by_id.get(model_id)
+        quota_warning = bool(
+            quota
+            and quota.get("remaining_requests") == 0
+            and quota.get("requests_reset_at")
+            and quota["requests_reset_at"] > datetime.now(UTC).isoformat()
+            and quota.get("observed_at")
+            and quota["observed_at"] > (datetime.now(UTC) - timedelta(days=1)).isoformat()
+        )
         reasons = []
         if not config["enabled"]:
             reasons.append("Disabled in Settings")
@@ -76,6 +88,8 @@ def compare_models(app, local_only=False, task_hint=None, input_chars=0):
             reasons.append("Configured price is unknown")
         if not observed["observed_requests"]:
             reasons.append("No recent chat outcomes recorded")
+        if quota_warning:
+            reasons.append("Provider reported no requests remaining until its reset (advisory)")
         if task_hint:
             if task_hint in tags:
                 reasons.append(f"User-labeled strength: {task_hint}")
@@ -102,6 +116,7 @@ def compare_models(app, local_only=False, task_hint=None, input_chars=0):
                 "task_tags": tags,
                 "context_limit_chars": context_limit,
                 "required_chars": required_chars,
+                "quota_warning": quota_warning,
                 "eligible": eligible,
                 "cooldown_seconds": cooldown,
                 "budget_status": budget["status"],
@@ -119,16 +134,18 @@ def compare_models(app, local_only=False, task_hint=None, input_chars=0):
         poor_history = observed >= 3 and completion_rate < 0.5
         budget_rank = {"exceeded": 2, "warning": 1}.get(item["budget_status"], 0)
         price = item["cost_per_1k_each_usd"]
-        return (
+        common = (
             not item["eligible"],
+            item["quota_warning"],
             budget_rank,
-            poor_history,
-            bool(task_hint and task_hint not in item["task_tags"]),
-            price is None,
-            Decimal(price) if price is not None else Decimal(0),
-            -completion_rate,
-            item["name"].casefold(),
         )
+        match = bool(task_hint and task_hint not in item["task_tags"])
+        cost = (price is None, Decimal(price) if price is not None else Decimal(0))
+        if priority == "lowest_cost":
+            return (*common, *cost, poor_history, match, -completion_rate, item["name"].casefold())
+        if priority == "reliable":
+            return (*common, poor_history, -completion_rate, match, *cost, item["name"].casefold())
+        return (*common, poor_history, match, *cost, -completion_rate, item["name"].casefold())
 
     items.sort(key=ranking)
     suggestion = next((item["model_id"] for item in items if item["eligible"]), None)
@@ -140,7 +157,9 @@ def compare_models(app, local_only=False, task_hint=None, input_chars=0):
         "scope": (
             "Read-only suggestion from configured prices, local request outcomes, "
             "manual budgets, task labels, context hints, and cooldowns. "
-            "It does not know provider quota, live availability, or answer quality. "
+            "Provider quota signals are advisory observations from prior responses, "
+            "not live balances. "
+            "It does not know live availability or answer quality. "
             "Selection is manual unless you explicitly enable automatic choice."
         ),
     }

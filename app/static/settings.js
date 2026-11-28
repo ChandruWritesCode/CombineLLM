@@ -2,7 +2,8 @@
 let models = [],
   preferences = {},
   editing = null,
-  pendingAction = null;
+  pendingAction = null,
+  editingProfile = null;
 const endpoints = {
   gemini: "https://generativelanguage.googleapis.com/v1beta",
   openai: "https://api.openai.com/v1",
@@ -183,7 +184,60 @@ async function load() {
     for (const model of models) select.append(new Option(`${model.name}${model.enabled ? "" : " (disabled)"}`, model.id));
     select.value = preferences.fallback_model_ids?.[index - 1] || "";
   }
+  renderProfiles();
 }
+function renderProfiles() {
+  const list = $("profile-list");
+  list.replaceChildren();
+  const profiles = preferences.routing_profiles || [];
+  if (!profiles.length) list.append(node("p", "No routing profiles yet.", "empty-list"));
+  for (const profile of profiles) {
+    const card = node("article", null, "model-card");
+    const copy = node("div");
+    copy.append(node("h3", profile.name), node("p", `${profile.mode} · ${profile.priority} · up to ${profile.max_calls} calls${profile.max_estimated_cost_usd == null ? "" : ` · $${profile.max_estimated_cost_usd} estimated limit`}`));
+    const actions = node("div", null, "model-actions");
+    actions.append(actionButton("Edit", () => {
+      editingProfile = profile.name;
+      $("profile-name").value = profile.name;
+      $("profile-mode").value = profile.mode;
+      $("profile-priority").value = profile.priority;
+      $("profile-calls").value = profile.max_calls;
+      $("profile-cost").value = profile.max_estimated_cost_usd ?? "";
+      $("profile-save").textContent = "Save profile";
+      $("profile-cancel").hidden = false;
+      $("profile-name").focus();
+    }));
+    actions.append(actionButton("Delete", () => confirmAction("Delete routing profile?", "Chats using this profile will need another profile selected for their next message.", async () => {
+      await saveProfiles(profiles.filter(p => p.name !== profile.name));
+      notice("Routing profile deleted.");
+    })));
+    card.append(copy, actions);
+    list.append(card);
+  }
+}
+async function saveProfiles(profiles) {
+  preferences = await api("/settings", { method: "PUT", body: JSON.stringify({ ...preferences, routing_profiles: profiles }) });
+  renderProfiles();
+}
+$("profile-mode").onchange = () => { $("profile-calls").value = {single: 1, review: 3, split: 4}[$("profile-mode").value]; };
+$("profile-cancel").onclick = () => {
+  editingProfile = null;
+  $("profile-form").reset();
+  $("profile-save").textContent = "Add profile";
+  $("profile-cancel").hidden = true;
+};
+$("profile-form").onsubmit = async event => {
+  event.preventDefault();
+  const profiles = (preferences.routing_profiles || []).filter(p => p.name !== editingProfile);
+  profiles.push({ name: $("profile-name").value.trim(), mode: $("profile-mode").value,
+    priority: $("profile-priority").value, max_calls: Number($("profile-calls").value),
+    max_estimated_cost_usd: $("profile-cost").value || null });
+  try {
+    await saveProfiles(profiles);
+    $("profile-cancel").click();
+    notice("Routing profile saved.");
+  } catch (e) { notice(e.message); }
+};
 $("add-model").onclick = () => edit();
 $("refresh-diagnostics").onclick = loadDiagnostics;
 $("model-kind").onchange = kindChanged;
@@ -249,7 +303,7 @@ $("model-form").onsubmit = async (event) => {
 $("defaults-form").onsubmit = async (event) => {
   event.preventDefault();
   try {
-    await api("/settings", {
+    preferences = await api("/settings", {
       method: "PUT",
       body: JSON.stringify({
         monthly_budget_usd: $("workspace-budget").value || null,
@@ -259,6 +313,7 @@ $("defaults-form").onsubmit = async (event) => {
         default_model_id: $("default-model").value || null,
         max_output_tokens: Number($("default-tokens").value),
         system_prompt: $("default-system").value,
+        routing_profiles: preferences.routing_profiles || [],
       }),
     });
     notice("Workspace defaults saved.");

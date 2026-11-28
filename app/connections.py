@@ -100,6 +100,22 @@ class Connection(BaseModel):
         return self
 
 
+class RoutingProfile(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+    name: str = Field(min_length=1, max_length=40)
+    mode: Literal["single", "review", "split"] = "single"
+    priority: Literal["balanced", "lowest_cost", "reliable"] = "balanced"
+    max_calls: int = Field(default=1, ge=1, le=4)
+    max_estimated_cost_usd: Money | None = None
+
+    @model_validator(mode="after")
+    def calls_cover_workflow(self):
+        required = {"single": 1, "review": 3, "split": 4}[self.mode]
+        if self.max_calls < required:
+            raise ValueError(f"This workflow needs a maximum of at least {required} calls")
+        return self
+
+
 class Preferences(BaseModel):
     model_config = ConfigDict(extra="forbid")
     default_model_id: str | None = None
@@ -109,6 +125,15 @@ class Preferences(BaseModel):
     budget_warning_percent: int = Field(default=80, ge=1, le=100)
     max_output_tokens: int = Field(default=2048, ge=1, le=8192)
     system_prompt: str = Field(default="", max_length=10000)
+    routing_profiles: list[RoutingProfile] = Field(default_factory=list, max_length=8)
+
+    @field_validator("routing_profiles")
+    @classmethod
+    def distinct_profile_names(cls, value):
+        names = [profile.name.casefold() for profile in value]
+        if len(set(names)) != len(names):
+            raise ValueError("Routing profile names must be distinct")
+        return value
 
 
 class Connections:
@@ -226,6 +251,7 @@ class Connections:
         self.get(model_id)
         with self.store.connect() as db:
             db.execute("DELETE FROM model_connections WHERE id=?", (model_id,))
+            db.execute("DELETE FROM preferences WHERE key=?", ("quota:" + model_id,))
         prefs = self.preferences()
         if prefs.default_model_id == model_id:
             prefs.default_model_id = None
