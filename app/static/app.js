@@ -120,6 +120,16 @@ function drawMessage(message) {
     message.content ||
     (message.status === "streaming" ? "Thinking…" : "No answer was generated.");
   article.append(head, content);
+  if (message.role === "assistant" && message.content && message.status !== "streaming") {
+    const copy = document.createElement("button");
+    copy.className = "quiet copy-response";
+    copy.textContent = "Copy response";
+    copy.onclick = async () => {
+      try { await navigator.clipboard.writeText(message.content); copy.textContent = "Copied!"; }
+      catch { notice("Clipboard access is unavailable. Select the response text to copy it."); }
+    };
+    article.append(copy);
+  }
   if (message.attempts?.length) {
     const attempts = document.createElement("details");
     const summary = document.createElement("summary");

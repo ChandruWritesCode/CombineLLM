@@ -1,5 +1,12 @@
 # Changelog
 
+## Phase 9 — interface and usability refresh
+
+- Added a vibrant violet, aqua, and coral palette across chat and management pages.
+- Improved navigation, responsive cards and forms, focus visibility, and skip links.
+- Added subtle motion with reduced-motion support and a Copy response action.
+- Moved coordinated models to Phase 10; theme choices remain future work.
+
 ## Phase 8 — provider discovery and guided setup
 
 - Added Find a model with nine dated provider guides and prefilled connection forms.

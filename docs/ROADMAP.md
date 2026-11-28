@@ -24,10 +24,12 @@ Each phase should leave the application runnable.
    Capability discovery and hard-budget reservations remain future work.
 8. **Provider discovery and guided setup (implemented):** dated curated directory,
    free/trial/local classifications, official links and prefilled setup walkthroughs.
-9. **Coordinated models (future):** draft/review, bounded task splitting, synthesis
+9. **Interface and usability refresh (implemented):** vibrant colors, responsive
+   layouts, accessible navigation, reduced-motion support and copy actions.
+10. **Coordinated models (future):** draft/review, bounded task splitting, synthesis
    and quality/cost evaluations.
 
 The scope was revised at the user's request: settings and basic usage moved into
-Phase 4; ordered fallback is now opt-in; intelligent coordination remains deferred. Website subscriptions do
+Phase 4; ordered fallback is now opt-in; intelligent coordination moves to Phase 10. Website subscriptions do
 not automatically grant API access. See [Phase 4](PHASE_4.md), [the changelog](../CHANGELOG.md)
 [Phase 5](PHASE_5.md), [Phase 6](PHASE_6.md) and [Git workflow](CONTRIBUTING.md). The user reported successful live Groq generation after Phase 6.
